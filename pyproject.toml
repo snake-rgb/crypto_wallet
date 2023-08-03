@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "crypto-wallet"
+version = "0.1.0"
+description = ""
+authors = ["Viktor1385 <viktor13851998@gmail.com>"]
+readme = "README.md"
+packages = [{include = "crypto_wallet"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+fastapi = "^0.100.1"
+uvicorn = "^0.23.2"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
