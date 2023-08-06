@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 import environ
+from fastapi_mail import ConnectionConfig
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -8,7 +9,7 @@ env = environ.Env()
 
 # read env
 environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
-
+SECRET_KEY = env('SECRET_KEY')
 # database info
 DATABASE = {
     'name': env('SQL_DB_NAME'),
@@ -23,3 +24,18 @@ DB_URL = (f"postgresql://{DATABASE['user']}:"
           f"@{DATABASE['host']}"
           f":{DATABASE['port']}"
           f"/{DATABASE['name']}")
+
+EMAIL_CONF = ConnectionConfig(
+    MAIL_USERNAME=env('EMAIL_USER'),
+    MAIL_PASSWORD=env('EMAIL_PASSWORD'),
+    MAIL_PORT=env('EMAIL_PORT'),
+    MAIL_SERVER=env('EMAIL_HOST'),
+    MAIL_STARTTLS=False,
+    MAIL_SSL_TLS=True,
+    MAIL_FROM=env('EMAIL_USER'),
+    USE_CREDENTIALS=True,
+    VALIDATE_CERTS=True,
+    TEMPLATE_FOLDER=BASE_DIR / 'src/users/templates',
+)
+RABBITMQ_URL = env('RABBITMQ_URL')
+CELERY_RESULT_BACKEND = env('CELERY_RESULT_BACKEND')

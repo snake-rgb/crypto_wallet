@@ -1,5 +1,5 @@
 from sqlalchemy import Column
-from sqlalchemy.types import String, Integer
+from sqlalchemy.types import String, Integer, Boolean
 from sqlalchemy_utils import EmailType, URLType, PasswordType
 
 from src.core.database import Base
@@ -12,6 +12,8 @@ class User(Base):
     email = Column(EmailType, unique=True)
     password = Column(String)
     profile_image = Column(URLType)
+    is_active = Column(Boolean, default=True)
+    has_chat_access = Column(Boolean, default=False)
 
     def __repr__(self):
         return (
@@ -20,4 +22,6 @@ class User(Base):
             f'Email - {self.email}\n'
             f'Password - {self.password}\n'
             f'Profile image - {self.profile_image}\n'
+            f'Is active - {self.is_active}\n'
+            f'Has chat access - {self.is_active}\n'
         )

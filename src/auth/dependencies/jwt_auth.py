@@ -1,0 +1,84 @@
+from typing import Union, Optional
+from datetime import datetime, timedelta
+import jwt
+from dependency_injector.wiring import inject
+from fastapi import Request, HTTPException
+from jwt import ExpiredSignatureError
+from starlette.status import HTTP_403_FORBIDDEN
+
+from config import settings
+from config.settings import SECRET_KEY
+from src.base.base import JwtHTTPBearer
+from src.users.models import User
+
+
+class UserAuth(JwtHTTPBearer):
+
+    def __init__(self):
+        super().__init__()
+
+    async def __call__(
+            self,
+            request: Request
+    ) -> Union[User, None]:
+        bearer = await super().__call__(request)
+        if token_verify(bearer.credentials):
+            return bearer
+        else:
+            return None
+
+
+def token_verify(access_token: str):
+    if access_token != 'bearer':
+        header_data = jwt.get_unverified_header(access_token)
+        try:
+            payload = jwt.decode(
+                access_token,
+                key=SECRET_KEY,
+                algorithms=[header_data['alg']]
+            )
+            return access_token
+
+        except ExpiredSignatureError:
+            raise HTTPException(
+                status_code=HTTP_403_FORBIDDEN, detail="Token expired"
+            )
+    else:
+        return access_token
+
+
+def create_access_token(user_id: int, remember_me: bool) -> str:
+    iat = datetime.utcnow()
+    expiration_time = datetime.utcnow() + timedelta(seconds=15)
+
+    if remember_me:
+        # token data
+        payload = {
+            'user_id': user_id,
+            'iat': iat,
+            "type": 'Bearer',
+        }
+    else:
+        # token data
+        payload = {
+            'user_id': user_id,
+            'iat': iat,
+            'exp': expiration_time,
+            "type": 'Bearer',
+        }
+
+    access_token = jwt.encode(payload, SECRET_KEY, algorithm='HS256')
+    return payload.get('type') + ' ' + access_token
+
+
+def decode_token(access_token: str) -> dict:
+    try:
+        header_data = jwt.get_unverified_header(access_token)
+        payload = jwt.decode(
+            access_token,
+            key=settings.SECRET_KEY,
+            algorithms=[header_data['alg']]
+        )
+        return payload
+    except:
+        return None

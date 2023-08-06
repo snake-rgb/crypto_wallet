@@ -1,9 +1,14 @@
 from typing import Callable
+
+import jwt
+from fastapi_mail import MessageSchema, MessageType, FastMail
 from sqlalchemy.orm import Session
+from config import settings
+from config.settings import SECRET_KEY
+from src.auth.dependencies.jwt_auth import decode_token
 from src.users.models import User
-from src.users.schemas import UserForm
-from src.users.services.repository import UserRepository
-from email_validator import validate_email, EmailNotValidError
+from src.users.schemas import UserForm, ProfileSchema
+from src.users.repositories.repository import UserRepository
 
 
 class UserService:
@@ -14,16 +19,40 @@ class UserService:
         self.session_factory = session_factory
         self.password_hasher = password_hasher
 
-    def get_users(self):
-        return self.user_repository.get_all()
+    async def get_users(self):
+        return await self.user_repository.get_all()
 
-    def get_user_by_id(self, user_id: int):
-        return self.user_repository.get_by_id(user_id)
+    async def get_user_by_id(self, user_id: int):
+        return await self.user_repository.get_by_id(user_id)
 
-    def delete_user_by_id(self, user_id: int):
-        return self.user_repository.delete_by_id(user_id)
+    async def delete_user_by_id(self, user_id: int) -> None:
+        return await self.user_repository.delete_by_id(user_id)
 
-    def create_user(self, user_form: UserForm):
+    async def register(self, user_form: UserForm) -> None:
         hashed_password = self.password_hasher(user_form.password)
-        self.user_repository.add(user_form, hashed_password=hashed_password)
-        return None
+        user = await self.user_repository.register(user_form, hashed_password=hashed_password)
+        await self.send_email(user)
+        return user
+
+    @staticmethod
+    async def send_email(user: User) -> None:
+        message = MessageSchema(
+            subject="Hello!",
+            recipients=[user.email],
+            template_body={'username': user.username},
+            subtype=MessageType.html
+        )
+        fm = FastMail(settings.EMAIL_CONF)
+        await fm.send_message(message, template_name='email_template.html')
+
+    async def profile(self, access_token: str) -> User:
+        payload = decode_token(access_token)
+        if payload:
+            user = await self.user_repository.get_by_id(payload.get('user_id'))
+        else:
+            user = await self.user_repository.get_by_id(1)
+        return user
+
+    async def profile_edit(self, access_token: str, profile_schema: ProfileSchema) -> User:
+        hashed_password = self.password_hasher(profile_schema.password)
+        return await self.user_repository.profile_edit(access_token, profile_schema, hashed_password)
