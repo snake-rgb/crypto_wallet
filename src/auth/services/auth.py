@@ -1,11 +1,10 @@
 from datetime import datetime, timedelta
-from config import settings
 from src.auth.dependencies.jwt_auth import create_access_token
 from src.auth.schemas import LoginScheme
 from src.auth.repositories.repository import AuthRepository
 from src.users.models import User
 from src.users.services.user import UserService
-from fastapi import Request, Response
+from fastapi import Response
 
 
 class AuthService:
@@ -32,5 +31,3 @@ class AuthService:
     @staticmethod
     async def logout(response: Response) -> None:
         response.delete_cookie('access_token')
-
-

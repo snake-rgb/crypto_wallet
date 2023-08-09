@@ -1,14 +1,11 @@
+from datetime import datetime, timedelta
 from typing import Callable
-
-import jwt
-from fastapi_mail import MessageSchema, MessageType, FastMail
 from sqlalchemy.orm import Session
-from config import settings
-from config.settings import SECRET_KEY
 from src.auth.dependencies.jwt_auth import decode_token
 from src.users.models import User
 from src.users.schemas import UserForm, ProfileSchema
 from src.users.repositories.repository import UserRepository
+
 
 
 class UserService:
@@ -28,22 +25,10 @@ class UserService:
     async def delete_user_by_id(self, user_id: int) -> None:
         return await self.user_repository.delete_by_id(user_id)
 
-    async def register(self, user_form: UserForm) -> None:
+    async def register(self, user_form: UserForm) -> User:
         hashed_password = self.password_hasher(user_form.password)
         user = await self.user_repository.register(user_form, hashed_password=hashed_password)
-        await self.send_email(user)
         return user
-
-    @staticmethod
-    async def send_email(user: User) -> None:
-        message = MessageSchema(
-            subject="Hello!",
-            recipients=[user.email],
-            template_body={'username': user.username},
-            subtype=MessageType.html
-        )
-        fm = FastMail(settings.EMAIL_CONF)
-        await fm.send_message(message, template_name='email_template.html')
 
     async def profile(self, access_token: str) -> User:
         payload = decode_token(access_token)
@@ -56,3 +41,6 @@ class UserService:
     async def profile_edit(self, access_token: str, profile_schema: ProfileSchema) -> User:
         hashed_password = self.password_hasher(profile_schema.password)
         return await self.user_repository.profile_edit(access_token, profile_schema, hashed_password)
+
+    async def chat_activate(self, user_id: int) -> None:
+        return await self.user_repository.chat_activate(user_id)

@@ -1,16 +1,13 @@
-from typing import Annotated
-from dependency_injector.wiring import inject, Provide
-from fastapi import APIRouter, Depends, Response, Request
+from dependency_injector.wiring import Provide, inject
+from fastapi import APIRouter, Response, Request, Depends
 from fastapi.security import HTTPAuthorizationCredentials
-
-from config import settings
 from src.auth.containers import AuthContainer
 from src.auth.dependencies.jwt_auth import UserAuth
 from src.auth.schemas import LoginScheme
 from src.auth.services.auth import AuthService
-from fastapi_mail import FastMail, MessageSchema, ConnectionConfig, MessageType
 
-auth_router = APIRouter()
+
+auth_router = APIRouter(tags=['auth'])
 
 # Login check
 user_auth = UserAuth()
@@ -58,6 +55,3 @@ async def test(
 ):
     print(bearer)
     return {'response': 'success'}
-
-
-

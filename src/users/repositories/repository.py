@@ -1,12 +1,10 @@
-import datetime
+from datetime import datetime, timedelta
 from typing import Callable, Iterator
 from sqlalchemy.orm import Session
-
 from src.auth.dependencies.jwt_auth import decode_token
 from src.users.models import User
 from src.users.schemas import UserForm, ProfileSchema
-import jwt
-import config.settings as settings
+
 
 
 class UserRepository:
@@ -41,7 +39,7 @@ class UserRepository:
             session.refresh(user)
             return user
 
-    async def profile_edit(self, access_token: str, profile_schema: ProfileSchema, hashed_password: str):
+    async def profile_edit(self, access_token: str, profile_schema: ProfileSchema, hashed_password: str) -> User:
         with self.session_factory() as session:
             payload = decode_token(access_token)
             if payload:
@@ -54,6 +52,13 @@ class UserRepository:
             session.commit()
             session.refresh(user)
             return user
+
+    async def chat_activate(self, user_id: int) -> None:
+        with self.session_factory() as session:
+            user = session.query(User).filter(User.id == user_id).first()
+            user.has_chat_access = True
+            session.commit()
+            session.refresh(user)
 
 
 class NotFoundError(Exception):

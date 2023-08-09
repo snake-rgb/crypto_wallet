@@ -24,6 +24,8 @@ celery = "^5.3.1"
 rabbitmq = "^0.2.0"
 propan = {extras = ["async-rabbit"], version = "^0.1.5.17"}
 redis = {extras = ["async"], version = "^4.6.0"}
+asgiref = "^3.7.2"
+web3 = "^6.8.0"
 
 
 [build-system]

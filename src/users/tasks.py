@@ -1,9 +1,6 @@
 from config_celery.celery_config import celery
-import time
 
 
-@celery.task
-def sample_task():
-    for i in range(5):
-        time.sleep(1)
-    return {'status': 'hello world'}
+@celery.on_after_configure.connect
+def setup_periodic_tasks(sender, **kwargs):
+    pass

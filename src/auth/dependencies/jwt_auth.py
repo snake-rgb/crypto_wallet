@@ -5,7 +5,6 @@ from dependency_injector.wiring import inject
 from fastapi import Request, HTTPException
 from jwt import ExpiredSignatureError
 from starlette.status import HTTP_403_FORBIDDEN
-
 from config import settings
 from config.settings import SECRET_KEY
 from src.base.base import JwtHTTPBearer
@@ -17,6 +16,7 @@ class UserAuth(JwtHTTPBearer):
     def __init__(self):
         super().__init__()
 
+    @inject
     async def __call__(
             self,
             request: Request

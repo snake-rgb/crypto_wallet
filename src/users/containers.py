@@ -7,10 +7,11 @@ from src.users.services.user import UserService
 
 class UserContainer(containers.DeclarativeContainer):
     wiring_config = containers.WiringConfiguration(packages=[
-        'src.users', 'src.auth', 'src.core', 'src.users.endpoints', 'config', 'src.auth.dependencies'
-    ], modules=['src.auth.containers']
+        'src.users', 'src.auth', 'src.celery', 'src.wallet', 'src.core', 'config',
+    ]
     )
 
+    # utils
     password_hasher = providers.Callable(passlib.hash.pbkdf2_sha256.hash)
     # repositories
     user_repository = providers.Factory(UserRepository, CoreContainer.session)

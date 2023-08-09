@@ -1,5 +1,4 @@
 from dependency_injector import containers, providers
-from src.auth.dependencies.jwt_auth import UserAuth
 from src.auth.repositories.repository import AuthRepository
 from src.auth.services.auth import AuthService
 from src.core.containers import CoreContainer
@@ -8,7 +7,7 @@ from src.users.containers import UserContainer
 
 class AuthContainer(containers.DeclarativeContainer):
     wiring_config = containers.WiringConfiguration(packages=[
-        'src.users', 'src.auth', 'src.core', 'src.users.endpoints', 'config', 'src.auth.dependencies'
+        'src.users', 'src.auth', 'src.celery', 'src.wallet', 'src.core', 'config',
     ]
     )
     # repository
