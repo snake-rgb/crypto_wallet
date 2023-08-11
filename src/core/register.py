@@ -7,10 +7,16 @@ from src.wallet.containers import WalletContainer
 
 class RegisterContainer(containers.DeclarativeContainer):
     wiring_config = containers.WiringConfiguration(packages=[
-        'src.users', 'src.auth', 'src.wallet', 'src.celery', 'src.core', 'config',
+        # 'src.users', 'src.auth', 'src.wallet', 'src.core', 'config',
+        'src', 'config'
     ]
     )
     core_container = providers.Container(CoreContainer)
-    users_container = providers.Container(UserContainer)
-    wallet_container = providers.Container(WalletContainer)
-    auth_container = providers.Container(AuthContainer)
+    user_container = providers.Container(UserContainer,
+                                         session=core_container.session)
+    auth_container = providers.Container(AuthContainer,
+                                         session=core_container.session,
+                                         user_service=user_container.user_service)
+    wallet_container = providers.Container(WalletContainer,
+                                           session=core_container.session,
+                                           user_service=user_container.user_service)

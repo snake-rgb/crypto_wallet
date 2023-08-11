@@ -5,11 +5,10 @@ from src.users.endpoints.user_endpoints import register_router, user_rabbit_rout
 from src.wallet.endpoints.wallet import wallet_router
 
 
-def create_app():
+def create_app() -> FastAPI:
     container = RegisterContainer()
     db = container.core_container.db()
     db.create_database()
-
     # fast api
     fast_api_app = FastAPI(lifespan=user_rabbit_router.lifespan_context)
 
@@ -18,6 +17,7 @@ def create_app():
     fast_api_app.include_router(auth_router)
     fast_api_app.include_router(user_rabbit_router)
     fast_api_app.include_router(wallet_router)
+
     return fast_api_app
 
 

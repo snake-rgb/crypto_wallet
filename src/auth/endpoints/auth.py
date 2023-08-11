@@ -6,7 +6,6 @@ from src.auth.dependencies.jwt_auth import UserAuth
 from src.auth.schemas import LoginScheme
 from src.auth.services.auth import AuthService
 
-
 auth_router = APIRouter(tags=['auth'])
 
 # Login check
@@ -23,7 +22,7 @@ user_auth = UserAuth()
 async def login(
         login_scheme: LoginScheme,
         response: Response,
-        auth_service: AuthService = Depends(Provide(AuthContainer.auth_service))
+        auth_service: AuthService = Depends(Provide[AuthContainer.auth_service])
 ):
     user = await auth_service.login(login_scheme, response)
     return {'response': user}
@@ -39,7 +38,7 @@ async def login(
 @inject
 async def logout(
         response: Response,
-        auth_service: AuthService = Depends(Provide(AuthContainer.auth_service)),
+        auth_service: AuthService = Depends(Provide[AuthContainer.auth_service]),
         bearer: HTTPAuthorizationCredentials = Depends(user_auth),
 ):
     await auth_service.logout(response)
@@ -50,7 +49,7 @@ async def logout(
 @inject
 async def test(
         request: Request,
-        auth_service: AuthService = Depends(Provide(AuthContainer.auth_service)),
+        auth_service: AuthService = Depends(Provide[AuthContainer.auth_service]),
         bearer: HTTPAuthorizationCredentials = Depends(user_auth),
 ):
     print(bearer)

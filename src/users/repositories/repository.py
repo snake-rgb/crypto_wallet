@@ -1,10 +1,8 @@
-from datetime import datetime, timedelta
 from typing import Callable, Iterator
 from sqlalchemy.orm import Session
 from src.auth.dependencies.jwt_auth import decode_token
 from src.users.models import User
 from src.users.schemas import UserForm, ProfileSchema
-
 
 
 class UserRepository:
@@ -24,11 +22,10 @@ class UserRepository:
 
     async def delete_by_id(self, user_id: int) -> None:
         with self.session_factory() as session:
-            # entity - сущность
-            entity: User = session.query(User).filter(User.id == user_id).first()
-            if not entity:
+            user = session.query(User).filter(User.id == user_id).first()
+            if not user:
                 raise UserNotFoundError(user_id)
-            session.delete(entity)
+            session.delete(user)
             session.commit()
 
     async def register(self, user_form: UserForm, hashed_password) -> User:

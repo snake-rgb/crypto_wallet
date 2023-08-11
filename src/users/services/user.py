@@ -1,19 +1,16 @@
 from datetime import datetime, timedelta
 from typing import Callable
-from sqlalchemy.orm import Session
 from src.auth.dependencies.jwt_auth import decode_token
 from src.users.models import User
 from src.users.schemas import UserForm, ProfileSchema
 from src.users.repositories.repository import UserRepository
-
+# from src.users.tasks import user_chat_activate, send_register_email
 
 
 class UserService:
 
-    def __init__(self, user_repository: UserRepository, session_factory: Callable[..., Session],
-                 password_hasher: Callable[[str], str]) -> None:
+    def __init__(self, user_repository: UserRepository, password_hasher: Callable[[str], str]) -> None:
         self.user_repository = user_repository
-        self.session_factory = session_factory
         self.password_hasher = password_hasher
 
     async def get_users(self):
@@ -28,6 +25,7 @@ class UserService:
     async def register(self, user_form: UserForm) -> User:
         hashed_password = self.password_hasher(user_form.password)
         user = await self.user_repository.register(user_form, hashed_password=hashed_password)
+
         return user
 
     async def profile(self, access_token: str) -> User:

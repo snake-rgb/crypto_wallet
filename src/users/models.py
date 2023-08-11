@@ -1,4 +1,5 @@
 from sqlalchemy import Column
+from sqlalchemy.orm import relationship
 from sqlalchemy.types import String, Integer, Boolean
 from sqlalchemy_utils import EmailType, URLType, PasswordType
 

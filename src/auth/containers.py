@@ -1,17 +1,18 @@
 from dependency_injector import containers, providers
 from src.auth.repositories.repository import AuthRepository
 from src.auth.services.auth import AuthService
-from src.core.containers import CoreContainer
-from src.users.containers import UserContainer
 
 
 class AuthContainer(containers.DeclarativeContainer):
     wiring_config = containers.WiringConfiguration(packages=[
-        'src.users', 'src.auth', 'src.celery', 'src.wallet', 'src.core', 'config',
+        'src.users', 'src.auth', 'src.wallet', 'src.core', 'config',
     ]
     )
+    session = providers.Dependency()
+    user_service = providers.Dependency()
+
     # repository
-    auth_repository = providers.Factory(AuthRepository, CoreContainer.session)
+    auth_repository = providers.Factory(AuthRepository, session)
 
     # services
-    auth_service = providers.Factory(AuthService, auth_repository, UserContainer.user_service)
+    auth_service = providers.Factory(AuthService, auth_repository, user_service)

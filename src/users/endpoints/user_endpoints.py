@@ -1,4 +1,3 @@
-from datetime import datetime, timedelta
 from propan.fastapi import RabbitRouter
 from config import settings
 from dependency_injector.wiring import Provide, inject
@@ -8,7 +7,6 @@ from src.auth.endpoints.auth import user_auth
 from src.users.containers import UserContainer
 from src.users.schemas import UserForm, ProfileSchema
 from src.users.services.user import UserService
-from src.celery.user_tasks import send_register_email, user_chat_activate
 
 register_router = APIRouter(tags=['user'])
 user_rabbit_router = RabbitRouter(settings.RABBITMQ_URL)
@@ -27,7 +25,7 @@ async def my_test():
 @register_router.get('/get_users/')
 @inject
 async def get_users(
-        user_service: UserService = Depends(Provide(UserContainer.user_service)),
+        user_service: UserService = Depends(Provide[UserContainer.user_service]),
         bearer: HTTPAuthorizationCredentials = Depends(user_auth)
 ):
     users = await user_service.get_users()
@@ -63,13 +61,8 @@ async def register(
         user_service: UserService = Depends(Provide(UserContainer.user_service)),
 ):
     user = await user_service.register(user_form)
-
-    # Absolute time and date of when the task should be executed.
-    eta = datetime.now() + timedelta(seconds=5)
-
-    # tasks
-    send_register_email.apply_async(args=[user.email, user.username])
-    user_chat_activate.apply_async(args=[user.id])
+    # send_register_email.apply_async(args=[user.email, user.username])
+    # user_chat_activate.apply_async(args=[user.id])
     return {'response': user}
 
 
