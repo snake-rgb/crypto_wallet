@@ -19,7 +19,7 @@ DATABASE = {
     'port': env('SQL_PORT'),
 }
 
-DB_URL = (f"postgresql://{DATABASE['user']}:"
+DB_URL = (f"postgresql+asyncpg://{DATABASE['user']}:"
           f"{DATABASE['password']}"
           f"@{DATABASE['host']}"
           f":{DATABASE['port']}"
@@ -40,3 +40,7 @@ EMAIL_CONF = ConnectionConfig(
 RABBITMQ_URL = env('RABBITMQ_URL')
 CELERY_RESULT_BACKEND = env('CELERY_RESULT_BACKEND')
 ETHEREUM_NODE_URL = env('ETHEREUM_NODE_URL')
+MORALIS_API_KEY = env('MORALIS_API_KEY')
+
+# ORIGINS
+SOCKET_IO_ORIGINS = [env('SOCKET_IO_ORIGINS')]

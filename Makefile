@@ -4,5 +4,7 @@ celery_run:
 beat_run:
 	celery
 
+socketio_run:
+	 uvicorn config_socketio.config_socketio:socket_app --port 8001
 run:
-	uvicorn config_fastapi.app:app --reload --port 8001
+	uvicorn config_fastapi.app:app --reload --port 8000

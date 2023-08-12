@@ -1,8 +1,9 @@
 from dependency_injector import providers, containers
-from src.auth.containers import AuthContainer
 from src.core.containers import CoreContainer
 from src.users.containers import UserContainer
 from src.wallet.containers import WalletContainer
+from src.api.containers import APIContainer
+from src.auth.containers import AuthContainer
 
 
 class RegisterContainer(containers.DeclarativeContainer):
@@ -11,6 +12,7 @@ class RegisterContainer(containers.DeclarativeContainer):
         'src', 'config'
     ]
     )
+    api_container = providers.Container(APIContainer)
     core_container = providers.Container(CoreContainer)
     user_container = providers.Container(UserContainer,
                                          session=core_container.session)
@@ -19,4 +21,5 @@ class RegisterContainer(containers.DeclarativeContainer):
                                          user_service=user_container.user_service)
     wallet_container = providers.Container(WalletContainer,
                                            session=core_container.session,
-                                           user_service=user_container.user_service)
+                                           user_service=user_container.user_service,
+                                           moralis_api=api_container.moralis_api)

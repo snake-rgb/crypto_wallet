@@ -1,3 +1,5 @@
+from typing import Optional
+
 from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Depends
 from fastapi.security import HTTPAuthorizationCredentials
@@ -30,10 +32,24 @@ async def create_wallet(
 @inject
 async def get_wallet_transactions(
         address: str,
+        limit: int | None = 10,
         wallet_service: WalletService = Depends(Provide[WalletContainer.wallet_service]),
         bearer: HTTPAuthorizationCredentials = Depends(user_auth),
 ):
-    response = await wallet_service.get_wallet_transactions(address=address)
+    response = await wallet_service.get_wallet_transactions(address=address, limit=limit)
+    return {'response': response}
+
+
+@wallet_router.post(
+    '/wallet/transaction/by_hash/',
+)
+@inject
+async def get_transaction_by_hash(
+        transaction_hase: str,
+        wallet_service: WalletService = Depends(Provide[WalletContainer.wallet_service]),
+        bearer: HTTPAuthorizationCredentials = Depends(user_auth),
+):
+    response = await wallet_service.get_transaction_by_hash(transaction_hase=transaction_hase)
     return {'response': response}
 
 
@@ -60,11 +76,15 @@ async def get_balance(
 async def send_transaction(
         from_address: str,
         to_address: str,
+        amount: float,
         wallet_service: WalletService = Depends(Provide[WalletContainer.wallet_service]),
         bearer: HTTPAuthorizationCredentials = Depends(user_auth),
 
 ):
-    response = await wallet_service.send_transaction(from_address, to_address)
+    response = await wallet_service.send_transaction(from_address=from_address,
+                                                     to_address=to_address,
+                                                     amount=amount,
+                                                     )
     return {'response': response}
 
 
@@ -79,5 +99,5 @@ async def import_wallet(
         bearer: HTTPAuthorizationCredentials = Depends(user_auth),
 
 ):
-    response = await wallet_service.import_wallet(private_key)
+    response = await wallet_service.import_wallet(private_key, bearer.credentials)
     return {'response': response}

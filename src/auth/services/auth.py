@@ -14,7 +14,7 @@ class AuthService:
         self.user_service = user_service
 
     async def login(self, login_scheme: LoginScheme, response: Response) -> User:
-        user = self.auth_repository.login(login_scheme)
+        user = await self.auth_repository.login(login_scheme)
         if user:
             access_token = create_access_token(user.id, remember_me=login_scheme.remember_me)
             expire_time = datetime.utcnow() + timedelta(seconds=15)

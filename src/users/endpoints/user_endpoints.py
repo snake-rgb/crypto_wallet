@@ -4,6 +4,7 @@ from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Depends
 from fastapi.security import HTTPAuthorizationCredentials
 from src.auth.endpoints.auth import user_auth
+from src.core.containers import CoreContainer
 from src.users.containers import UserContainer
 from src.users.schemas import UserForm, ProfileSchema
 from src.users.services.user import UserService
@@ -12,13 +13,14 @@ register_router = APIRouter(tags=['user'])
 user_rabbit_router = RabbitRouter(settings.RABBITMQ_URL)
 
 
-@user_rabbit_router.event('helloworld')
+@user_rabbit_router.event('startup')
 async def helloworld():
     print('hello world from broker')
 
 
-@user_rabbit_router.get('/my_test/')
-async def my_test():
+@user_rabbit_router.get('/db_create/')
+async def db_create():
+    await CoreContainer.db().create_database()
     await user_rabbit_router.broker.publish("Hello, Rabbit!", "helloworld")
 
 

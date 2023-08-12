@@ -1,61 +1,69 @@
 from typing import Callable, Iterator
-from sqlalchemy.orm import Session
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 from src.auth.dependencies.jwt_auth import decode_token
 from src.users.models import User
 from src.users.schemas import UserForm, ProfileSchema
 
 
 class UserRepository:
-    def __init__(self, session_factory: Callable[..., Session]) -> None:
+    def __init__(self, session_factory: Callable[..., AsyncSession]) -> None:
         self.session_factory = session_factory
 
     async def get_all(self) -> Iterator[User]:
-        with self.session_factory() as session:
-            return session.query(User).all()
+        async with self.session_factory() as session:
+            result = await session.execute(select(User))
+            users = result.scalars().all()
+            return users
 
     async def get_by_id(self, user_id: int) -> User:
-        with self.session_factory() as session:
-            user = session.query(User).filter(User.id == user_id).first()
+        async with self.session_factory() as session:
+            result = await session.execute(select(User).where(User.id == user_id))
+            user = result.scalar_one()
             if not user:
                 raise UserNotFoundError(user_id)
             return user
 
     async def delete_by_id(self, user_id: int) -> None:
-        with self.session_factory() as session:
-            user = session.query(User).filter(User.id == user_id).first()
+        async with self.session_factory() as session:
+            user = await session.get(User, user_id)
             if not user:
                 raise UserNotFoundError(user_id)
-            session.delete(user)
-            session.commit()
+
+            await session.delete(user)
+            await session.commit()
 
     async def register(self, user_form: UserForm, hashed_password) -> User:
-        with self.session_factory() as session:
+        async with self.session_factory() as session:
             user = User(**user_form.model_dump(exclude=['password', 'confirm_password']), password=hashed_password)
             session.add(user)
-            session.commit()
-            session.refresh(user)
+            await session.commit()
             return user
 
     async def profile_edit(self, access_token: str, profile_schema: ProfileSchema, hashed_password: str) -> User:
-        with self.session_factory() as session:
+        async with self.session_factory() as session:
             payload = decode_token(access_token)
             if payload:
-                user = session.query(User).filter(User.id == payload.get('user_id')).first()
+                result = await session.execute(select(User).where(User.id == payload.get('user_id')))
+                user = result.scalar_one()
             else:
-                user = session.query(User).filter(User.id == 1).one()
+                result = await session.execute(select(User).where(User.id == 1))
+                user = result.scalar_one()
+
             update_data = profile_schema.model_dump()
             user.password = hashed_password
             user.username = update_data.get('username')
-            session.commit()
-            session.refresh(user)
+            await session.commit()
+            await session.refresh(user)
             return user
 
     async def chat_activate(self, user_id: int) -> None:
-        with self.session_factory() as session:
-            user = session.query(User).filter(User.id == user_id).first()
+        async with self.session_factory() as session:
+            result = await session.execute(select(User).where(User.id == user_id))
+            user = result.scalar_one()
             user.has_chat_access = True
-            session.commit()
-            session.refresh(user)
+            await session.commit()
+            await session.refresh(user)
 
 
 class NotFoundError(Exception):
