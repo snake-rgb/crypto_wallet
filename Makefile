@@ -5,6 +5,13 @@ beat_run:
 	celery
 
 socketio_run:
-	 uvicorn config_socketio.config_socketio:socket_app --port 8001
+	 uvicorn config_socketio.config_socketio:socket_app --port 8001 --workers 1 --reload
+socketio_client_run:
+	python config_socketio/config_socketio_client.py
 run:
 	uvicorn config_fastapi.app:app --reload --port 8000
+
+makemigrations:
+	alembic revision --autogenerate
+migrate:
+	alembic upgrade head

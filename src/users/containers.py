@@ -5,10 +5,6 @@ from src.users.services.user import UserService
 
 
 class UserContainer(containers.DeclarativeContainer):
-    wiring_config = containers.WiringConfiguration(packages=[
-        'src.users', 'src.auth', 'src.wallet', 'src.core', 'config',
-    ]
-    )
     # DB session
     session = providers.Dependency()
     # utils

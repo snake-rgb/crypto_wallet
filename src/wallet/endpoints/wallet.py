@@ -1,12 +1,8 @@
-from typing import Optional
-
 from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Depends
 from fastapi.security import HTTPAuthorizationCredentials
 from src.auth.endpoints.auth import user_auth
-from src.users.containers import UserContainer
-from src.users.services.user import UserService
-from src.wallet.containers import WalletContainer
+from src.core.register import RegisterContainer
 from src.wallet.service.wallet import WalletService
 
 wallet_router = APIRouter(tags=['wallet'])
@@ -18,7 +14,7 @@ wallet_router = APIRouter(tags=['wallet'])
 )
 @inject
 async def create_wallet(
-        wallet_service: WalletService = Depends(Provide[WalletContainer.wallet_service]),
+        wallet_service: WalletService = Depends(Provide[RegisterContainer.wallet_container.wallet_service]),
         bearer: HTTPAuthorizationCredentials = Depends(user_auth),
 ):
     response = await wallet_service.create_wallet(bearer.credentials)
@@ -33,7 +29,7 @@ async def create_wallet(
 async def get_wallet_transactions(
         address: str,
         limit: int | None = 10,
-        wallet_service: WalletService = Depends(Provide[WalletContainer.wallet_service]),
+        wallet_service: WalletService = Depends(Provide[RegisterContainer.wallet_container.wallet_service]),
         bearer: HTTPAuthorizationCredentials = Depends(user_auth),
 ):
     response = await wallet_service.get_wallet_transactions(address=address, limit=limit)
@@ -46,7 +42,7 @@ async def get_wallet_transactions(
 @inject
 async def get_transaction_by_hash(
         transaction_hase: str,
-        wallet_service: WalletService = Depends(Provide[WalletContainer.wallet_service]),
+        wallet_service: WalletService = Depends(Provide[RegisterContainer.wallet_container.wallet_service]),
         bearer: HTTPAuthorizationCredentials = Depends(user_auth),
 ):
     response = await wallet_service.get_transaction_by_hash(transaction_hase=transaction_hase)
@@ -60,7 +56,7 @@ async def get_transaction_by_hash(
 @inject
 async def get_balance(
         wallet_address: str,
-        wallet_service: WalletService = Depends(Provide[WalletContainer.wallet_service]),
+        wallet_service: WalletService = Depends(Provide[RegisterContainer.wallet_container.wallet_service]),
         bearer: HTTPAuthorizationCredentials = Depends(user_auth),
 
 ):
@@ -77,7 +73,7 @@ async def send_transaction(
         from_address: str,
         to_address: str,
         amount: float,
-        wallet_service: WalletService = Depends(Provide[WalletContainer.wallet_service]),
+        wallet_service: WalletService = Depends(Provide[RegisterContainer.wallet_container.wallet_service]),
         bearer: HTTPAuthorizationCredentials = Depends(user_auth),
 
 ):
@@ -95,7 +91,7 @@ async def send_transaction(
 @inject
 async def import_wallet(
         private_key: str,
-        wallet_service: WalletService = Depends(Provide[WalletContainer.wallet_service]),
+        wallet_service: WalletService = Depends(Provide[RegisterContainer.wallet_container.wallet_service]),
         bearer: HTTPAuthorizationCredentials = Depends(user_auth),
 
 ):

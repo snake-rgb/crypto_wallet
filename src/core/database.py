@@ -1,11 +1,8 @@
 from dependency_injector.providers import Singleton
-from contextlib import contextmanager, AbstractContextManager, asynccontextmanager
-from typing import Callable
+from contextlib import asynccontextmanager
 import logging
-from sqlalchemy import create_engine, orm
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import Session
 
 Base = declarative_base()
 logger = logging.getLogger(__name__)
@@ -15,7 +12,6 @@ class Database(Singleton):
     def __init__(self, db_url: str) -> None:
         super().__init__()
 
-        # self._engine = create_engine(db_url, echo=True)
         self._engine = create_async_engine(db_url, echo=True, future=True)
         self._session_factory = async_sessionmaker(self._engine, autoflush=False, expire_on_commit=False)
 

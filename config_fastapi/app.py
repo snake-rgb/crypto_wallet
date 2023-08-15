@@ -1,23 +1,18 @@
-import os.path
-
 from fastapi import FastAPI, Request
+from propan import RabbitBroker
 from propan.fastapi import RabbitRouter
-from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import HTMLResponse
 from starlette.templating import Jinja2Templates
-
+from fastapi.middleware.cors import CORSMiddleware
 from config import settings
+from .routers import init_routers
 from config_socketio.config_socketio import socket_app
-from src.auth.endpoints.auth import auth_router
 from src.core.database import Database
 from src.core.register import RegisterContainer
-from src.users.endpoints.user_endpoints import register_router, user_rabbit_router
-from src.wallet.endpoints.wallet import wallet_router
 
-rabbit_router = RabbitRouter(settings.RABBITMQ_URL)
-
+rabbit_router = RabbitRouter(settings.RABBITMQ_URL, prefix='/app')
 templates = Jinja2Templates(directory='templates')
-
+broker = RabbitBroker("amqp://guest:guest@localhost:5672/")
 # Настройки CORS
 origins = [
     "http://localhost",
@@ -28,18 +23,9 @@ origins = [
 
 
 def create_app() -> FastAPI:
-    container = RegisterContainer()
-    db: Database = container.core_container.db()
-    # db.create_database()
     # fast api
-    fast_api_app = FastAPI(lifespan=user_rabbit_router.lifespan_context)
+    fast_api_app = FastAPI()
 
-    fast_api_app.container = container
-
-    fast_api_app.include_router(register_router)
-    fast_api_app.include_router(auth_router)
-    fast_api_app.include_router(user_rabbit_router)
-    fast_api_app.include_router(wallet_router)
     fast_api_app.add_middleware(
         CORSMiddleware,
         allow_origins=origins,
@@ -47,14 +33,27 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+    init_routers(fast_api_app)
     fast_api_app.mount("/socket.io", socket_app)
-
     return fast_api_app
 
 
 app = create_app()
 
 
-@app.get("/index/", response_class=HTMLResponse,)
+@app.get("/index/", response_class=HTMLResponse, )
 async def read_item(request: Request):
     return templates.TemplateResponse("index.html", {'request': request})
+
+
+@app.on_event('startup')
+async def startup():
+    container = RegisterContainer()
+    db: Database = container.core_container.db()
+    app.container = container
+    print('fastapi startup')
+
+
+@app.on_event('shutdown')
+async def shutdown():
+    print('fastapi shutdown')

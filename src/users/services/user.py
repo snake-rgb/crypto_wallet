@@ -1,10 +1,8 @@
-from datetime import datetime, timedelta
 from typing import Callable
 from src.auth.dependencies.jwt_auth import decode_token
 from src.users.models import User
 from src.users.schemas import UserForm, ProfileSchema
 from src.users.repositories.repository import UserRepository
-# from src.users.tasks import user_chat_activate, send_register_email
 
 
 class UserService:
@@ -25,7 +23,6 @@ class UserService:
     async def register(self, user_form: UserForm) -> User:
         hashed_password = self.password_hasher(user_form.password)
         user = await self.user_repository.register(user_form, hashed_password=hashed_password)
-
         return user
 
     async def profile(self, access_token: str) -> User:
@@ -37,8 +34,11 @@ class UserService:
         return user
 
     async def profile_edit(self, access_token: str, profile_schema: ProfileSchema) -> User:
-        hashed_password = self.password_hasher(profile_schema.password)
-        return await self.user_repository.profile_edit(access_token, profile_schema, hashed_password)
+        if profile_schema.password is not None:
+            hashed_password = self.password_hasher(profile_schema.password)
+            return await self.user_repository.profile_edit(access_token, profile_schema, hashed_password)
+        else:
+            return await self.user_repository.profile_edit(access_token, profile_schema, hashed_password=None)
 
     async def chat_activate(self, user_id: int) -> None:
         return await self.user_repository.chat_activate(user_id)

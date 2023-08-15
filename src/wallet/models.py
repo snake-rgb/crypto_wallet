@@ -1,4 +1,6 @@
-from sqlalchemy import Column, Integer, Boolean, Float, ForeignKey, CHAR, String
+import datetime
+
+from sqlalchemy import Column, Integer, Boolean, Float, ForeignKey, CHAR, String, Numeric, DECIMAL, DateTime
 from sqlalchemy.orm import relationship
 from sqlalchemy_utils import URLType
 
@@ -9,7 +11,7 @@ class Wallet(Base):
     __tablename__ = 'wallets'
     id = Column(Integer, primary_key=True, unique=True)
     address = Column(String)
-    balance = Column(Float)
+    balance = Column(DECIMAL(precision=30, scale=18))
     private_key = Column(String)
 
     user_id = Column(Integer, ForeignKey('users.id'))
@@ -40,3 +42,15 @@ class Blockchain(Base):
     asset_id = Column(Integer, ForeignKey('assets.id'))
     # args  =  model name, table name
     asset = relationship('Asset', backref="blockchains")
+
+
+class Transaction(Base):
+    __tablename__ = 'transactions'
+    id = Column(Integer, primary_key=True, unique=True)
+    hash = Column(String)
+    from_address = Column(String)
+    to_address = Column(String)
+    value = Column(DECIMAL(precision=30, scale=18))
+    age = Column(DateTime(), default=datetime.datetime.utcnow())
+    fee = Column(DECIMAL(precision=30, scale=18))
+    status = Column(String, default='PENDING')

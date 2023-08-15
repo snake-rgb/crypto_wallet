@@ -35,13 +35,15 @@ class UserRepository:
 
     async def register(self, user_form: UserForm, hashed_password) -> User:
         async with self.session_factory() as session:
-            user = User(**user_form.model_dump(exclude=['password', 'confirm_password']), password=hashed_password)
+            user = User(**user_form.model_dump(exclude=['password', 'confirm_password']),
+                        password=hashed_password)
             session.add(user)
             await session.commit()
             return user
 
     async def profile_edit(self, access_token: str, profile_schema: ProfileSchema, hashed_password: str) -> User:
         async with self.session_factory() as session:
+
             payload = decode_token(access_token)
             if payload:
                 result = await session.execute(select(User).where(User.id == payload.get('user_id')))
@@ -51,10 +53,15 @@ class UserRepository:
                 user = result.scalar_one()
 
             update_data = profile_schema.model_dump()
-            user.password = hashed_password
-            user.username = update_data.get('username')
+
+            if hashed_password:
+                user.password = hashed_password
+            if update_data.get('username'):
+                user.username = update_data.get('username')
+
             await session.commit()
             await session.refresh(user)
+
             return user
 
     async def chat_activate(self, user_id: int) -> None:
