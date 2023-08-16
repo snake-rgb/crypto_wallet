@@ -2,24 +2,7 @@ from sqlalchemy import Column
 from sqlalchemy.orm import relationship
 from sqlalchemy.types import String, Integer, Boolean
 from sqlalchemy_utils import EmailType, URLType, PasswordType
-import json
-from sqlalchemy import TypeDecorator, Unicode
 from src.core.database import Base
-
-
-
-class Json(TypeDecorator):
-    impl = Unicode
-
-    def process_bind_param(self, value, engine):
-        return json.dumps(value)
-
-    def process_result_value(self, value, engine):
-        if value is None:
-            return None
-
-        return json.loads(value)
-
 
 
 class User(Base):

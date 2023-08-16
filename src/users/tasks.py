@@ -25,13 +25,14 @@ def send_register_email(email: str, username: str) -> dict:
     return {'status': 'success'}
 
 
+# TODO: Исправить зависимости
 @celery.task()
 @inject
 def user_chat_activate(
         user_id: int,
         # user_service: UserService = Provide[RegisterContainer.user_container.user_service]
 ):
-    user_service = RegisterContainer.user_container.user_service()
-
+    user_service: UserService = RegisterContainer.user_container.user_service()
     async_to_sync(user_service.chat_activate)(user_id)
+    #  user_service.chat_activate(user_id)
     return {'status': user_id}

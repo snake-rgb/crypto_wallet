@@ -1,5 +1,9 @@
 from typing import Callable
+
+from fastapi import HTTPException
+
 from src.auth.dependencies.jwt_auth import decode_token
+from src.boto3.services.boto3 import Boto3Service
 from src.users.models import User
 from src.users.schemas import UserForm, ProfileSchema
 from src.users.repositories.repository import UserRepository
@@ -7,9 +11,15 @@ from src.users.repositories.repository import UserRepository
 
 class UserService:
 
-    def __init__(self, user_repository: UserRepository, password_hasher: Callable[[str], str]) -> None:
+    def __init__(
+            self,
+            user_repository: UserRepository,
+            password_hasher: Callable[[str], str],
+            boto3_service: Boto3Service
+    ) -> None:
         self.user_repository = user_repository
         self.password_hasher = password_hasher
+        self.boto3_service = boto3_service
 
     async def get_users(self):
         return await self.user_repository.get_all()
@@ -20,10 +30,16 @@ class UserService:
     async def delete_user_by_id(self, user_id: int) -> None:
         return await self.user_repository.delete_by_id(user_id)
 
+    # TODO: Исправить оишбку
     async def register(self, user_form: UserForm) -> User:
         hashed_password = self.password_hasher(user_form.password)
-        user = await self.user_repository.register(user_form, hashed_password=hashed_password)
-        return user
+        image_url = await self.boto3_service.upload_image(user_form.profile_image)
+        user_form.profile_image = image_url
+        if image_url:
+            user = await self.user_repository.register(user_form, hashed_password=hashed_password)
+            return user
+        else:
+            raise HTTPException('Не удалось создать пользователя')
 
     async def profile(self, access_token: str) -> User:
         payload = decode_token(access_token)
@@ -34,6 +50,10 @@ class UserService:
         return user
 
     async def profile_edit(self, access_token: str, profile_schema: ProfileSchema) -> User:
+
+        if profile_schema.profile_image != '':
+            profile_schema.profile_image = await self.boto3_service.upload_image(profile_schema.profile_image)
+
         if profile_schema.password is not None:
             hashed_password = self.password_hasher(profile_schema.password)
             return await self.user_repository.profile_edit(access_token, profile_schema, hashed_password)

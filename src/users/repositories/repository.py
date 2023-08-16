@@ -43,7 +43,6 @@ class UserRepository:
 
     async def profile_edit(self, access_token: str, profile_schema: ProfileSchema, hashed_password: str) -> User:
         async with self.session_factory() as session:
-
             payload = decode_token(access_token)
             if payload:
                 result = await session.execute(select(User).where(User.id == payload.get('user_id')))
@@ -58,6 +57,8 @@ class UserRepository:
                 user.password = hashed_password
             if update_data.get('username'):
                 user.username = update_data.get('username')
+            if update_data.get('profile_image') != '':
+                user.profile_image = update_data.get('profile_image')
 
             await session.commit()
             await session.refresh(user)

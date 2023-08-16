@@ -5,6 +5,7 @@ from src.users.containers import UserContainer
 from src.wallet.containers import WalletContainer
 from src.api.containers import APIContainer
 from src.auth.containers import AuthContainer
+from src.boto3.containers import Boto3Container
 
 
 class RegisterContainer(containers.DeclarativeContainer):
@@ -14,10 +15,13 @@ class RegisterContainer(containers.DeclarativeContainer):
 
     api_container = providers.Container(APIContainer)
     core_container = providers.Container(CoreContainer)
+    boto3_container = providers.Container(Boto3Container, session=core_container.session)
 
     user_container = providers.Container(
         UserContainer,
-        session=core_container.session)
+        session=core_container.session,
+        boto3_service=boto3_container.boto3_service
+    )
 
     auth_container = providers.Container(
         AuthContainer,

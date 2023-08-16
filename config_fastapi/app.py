@@ -1,18 +1,20 @@
 from fastapi import FastAPI, Request
 from propan import RabbitBroker
+from propan.brokers.rabbit import RabbitQueue, RabbitExchange, ExchangeType
 from propan.fastapi import RabbitRouter
 from starlette.responses import HTMLResponse
 from starlette.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
 from config import settings
 from .routers import init_routers
-from config_socketio.config_socketio import socket_app
+from config_socketio.config_socketio import socket_app, socket_rabbit_router
 from src.core.database import Database
 from src.core.register import RegisterContainer
 
-rabbit_router = RabbitRouter(settings.RABBITMQ_URL, prefix='/app')
+# rabbit_router = RabbitRouter(settings.RABBITMQ_URL, prefix='/app')
 templates = Jinja2Templates(directory='templates')
-broker = RabbitBroker("amqp://guest:guest@localhost:5672/")
+broker = RabbitBroker("amqp://guest:guest@localhost:5672/", apply_types=False)
+
 # Настройки CORS
 origins = [
     "http://localhost",
@@ -51,9 +53,21 @@ async def startup():
     container = RegisterContainer()
     db: Database = container.core_container.db()
     app.container = container
-    print('fastapi startup')
+    app.broker = broker
+    app.broker.include_router(socket_rabbit_router)
+    await broker.start()
 
 
 @app.on_event('shutdown')
 async def shutdown():
+    await broker.close()
     print('fastapi shutdown')
+
+
+queue1 = RabbitQueue(name='queue1')
+rabbit_exchange = RabbitExchange(name='rabbit_exchange', type=ExchangeType.FANOUT)
+
+
+@app.get('/test/')
+async def test():
+    await broker.publish('sjfhdkdfg', queue=queue1, exchange=rabbit_exchange)

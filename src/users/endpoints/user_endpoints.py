@@ -52,8 +52,7 @@ async def register(
 ):
     user = await user_service.register(user_form)
     # user activation timer
-    eta_time = datetime.utcnow() + timedelta(seconds=10)
-
+    eta_time = datetime.utcnow() + timedelta(seconds=60)
     send_register_email.apply_async(args=[user.email, user.username])
     user_chat_activate.apply_async(args=[user.id], eta=eta_time)
 

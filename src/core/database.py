@@ -12,7 +12,8 @@ class Database(Singleton):
     def __init__(self, db_url: str) -> None:
         super().__init__()
 
-        self._engine = create_async_engine(db_url, echo=True, future=True)
+        self._engine = create_async_engine(db_url, echo=True)
+        # self._engine = create_async_engine(db_url, echo=True, future=True)
         self._session_factory = async_sessionmaker(self._engine, autoflush=False, expire_on_commit=False)
 
     async def create_database(self) -> None:
