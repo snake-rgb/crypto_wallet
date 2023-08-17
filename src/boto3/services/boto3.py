@@ -1,10 +1,6 @@
 import base64
 import uuid
 from io import BytesIO
-
-import boto3
-
-from config import settings
 import logging
 from botocore.exceptions import ClientError
 
@@ -64,7 +60,6 @@ class Boto3Service:
                 Bucket=self.bucket_name,
                 Key=file_path
             )
-
             public_url = f"https://{self.bucket_name}.s3.amazonaws.com/{file_path}"
             return public_url
         except Exception as e:

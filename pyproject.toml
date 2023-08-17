@@ -32,6 +32,7 @@ alembic = "^1.11.2"
 boto3 = "^1.28.26"
 pillow = "^10.0.0"
 python-multipart = "^0.0.6"
+aioredis = "^2.0.1"
 
 
 [tool.poetry.group.dev.dependencies]

@@ -30,7 +30,6 @@ class UserService:
     async def delete_user_by_id(self, user_id: int) -> None:
         return await self.user_repository.delete_by_id(user_id)
 
-    # TODO: Исправить оишбку
     async def register(self, user_form: UserForm) -> User:
         hashed_password = self.password_hasher(user_form.password)
         image_url = await self.boto3_service.upload_image(user_form.profile_image)
@@ -60,5 +59,5 @@ class UserService:
         else:
             return await self.user_repository.profile_edit(access_token, profile_schema, hashed_password=None)
 
-    async def chat_activate(self, user_id: int) -> None:
+    async def chat_activate(self, user_id: int) -> User:
         return await self.user_repository.chat_activate(user_id)

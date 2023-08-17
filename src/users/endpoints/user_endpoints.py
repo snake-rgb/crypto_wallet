@@ -51,11 +51,11 @@ async def register(
         user_service: UserService = Depends(Provide[RegisterContainer.user_container.user_service]),
 ):
     user = await user_service.register(user_form)
-    # user activation timer
-    eta_time = datetime.utcnow() + timedelta(seconds=60)
-    send_register_email.apply_async(args=[user.email, user.username])
-    user_chat_activate.apply_async(args=[user.id], eta=eta_time)
-
+    if user:
+        # user activation timer
+        eta_time = datetime.utcnow() + timedelta(seconds=5)
+        send_register_email.apply_async(args=[user.email, user.username])
+        user_chat_activate.apply_async(args=[user.id], eta=eta_time)
     return {'response': user}
 
 

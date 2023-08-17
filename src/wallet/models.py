@@ -11,7 +11,7 @@ class Wallet(Base):
     __tablename__ = 'wallets'
     id = Column(Integer, primary_key=True, unique=True)
     address = Column(String)
-    balance = Column(DECIMAL(precision=30, scale=18))
+    balance = Column(DECIMAL())
     private_key = Column(String)
 
     user_id = Column(Integer, ForeignKey('users.id'))

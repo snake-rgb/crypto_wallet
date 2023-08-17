@@ -10,9 +10,22 @@ from src.boto3.containers import Boto3Container
 
 class RegisterContainer(containers.DeclarativeContainer):
     wiring_config = containers.WiringConfiguration(
-        packages=['src', 'config', 'config_fastapi', 'config_socketio', 'config_celery']
+        packages=[
+            'config',
+            'config_fastapi',
+            'config_socketio',
+            'config_celery',
+            'src.core',
+            'src.api',
+            'src.auth',
+            'src.base',
+            'src.boto3',
+            'src.ibay',
+            'src.parser',
+            'src.users',
+            'src.wallet',
+        ]
     )
-
     api_container = providers.Container(APIContainer)
     core_container = providers.Container(CoreContainer)
     boto3_container = providers.Container(Boto3Container, session=core_container.session)
@@ -33,7 +46,8 @@ class RegisterContainer(containers.DeclarativeContainer):
         session=core_container.session,
         user_service=user_container.user_service,
         moralis_api=api_container.moralis_api,
-        web3_api=api_container.web3_api)
+        web3_api=api_container.web3_api,
+        boto3_service=boto3_container.boto3_service)
 
     parser_container = providers.Container(
         ParserContainer,

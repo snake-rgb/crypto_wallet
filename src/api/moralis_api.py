@@ -17,7 +17,8 @@ class MoralisAPI:
                 return response.json()
             else:
                 print("Ошибка при запросе к Moralis API:", response.status_code)
-                raise HTTPException(status_code=response.status_code, detail='Api error')
+                raise HTTPException(status_code=response.status_code,
+                                    detail=f'Api error {response.status_code} - {response.json()}')
 
     async def get_transaction_by_hash(self, transaction_hase: str) -> dict:
         url = f'https://deep-index.moralis.io/api/v2/transaction/{transaction_hase}?chain=sepolia'
@@ -29,5 +30,6 @@ class MoralisAPI:
             if response.status_code == 200:
                 return response.json()
             else:
-                print("Ошибка при запросе к Moralis API:", response.status_code)
-                raise HTTPException(status_code=response.status_code, detail='Api error')
+                print("Ошибка при запросе к Moralis API:", response.status_code, )
+                raise HTTPException(status_code=response.status_code,
+                                    detail=f'Api error {response.status_code} - {response.json()}')

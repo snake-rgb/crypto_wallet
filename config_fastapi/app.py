@@ -1,19 +1,16 @@
 from fastapi import FastAPI, Request
 from propan import RabbitBroker
 from propan.brokers.rabbit import RabbitQueue, RabbitExchange, ExchangeType
-from propan.fastapi import RabbitRouter
 from starlette.responses import HTMLResponse
 from starlette.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
-from config import settings
 from .routers import init_routers
 from config_socketio.config_socketio import socket_app, socket_rabbit_router
 from src.core.database import Database
 from src.core.register import RegisterContainer
 
-# rabbit_router = RabbitRouter(settings.RABBITMQ_URL, prefix='/app')
 templates = Jinja2Templates(directory='templates')
-broker = RabbitBroker("amqp://guest:guest@localhost:5672/", apply_types=False)
+broker = RabbitBroker("amqp://guest:guest@localhost:5672/")
 
 # Настройки CORS
 origins = [
@@ -69,5 +66,12 @@ rabbit_exchange = RabbitExchange(name='rabbit_exchange', type=ExchangeType.FANOU
 
 
 @app.get('/test/')
-async def test():
-    await broker.publish('sjfhdkdfg', queue=queue1, exchange=rabbit_exchange)
+async def test(
+):
+    web3_api = RegisterContainer.api_container.web3_api()
+    block_number = int(await web3_api.get_block_number_latest())
+
+    latest_block = await web3_api.get_block_by_number(block_number)
+    transactions = latest_block.transactions
+    transaction_hashes = [tx.hash.hex() for tx in transactions]
+    print(transaction_hashes)

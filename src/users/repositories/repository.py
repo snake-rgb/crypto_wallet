@@ -65,13 +65,14 @@ class UserRepository:
 
             return user
 
-    async def chat_activate(self, user_id: int) -> None:
+    async def chat_activate(self, user_id: int) -> User:
         async with self.session_factory() as session:
             result = await session.execute(select(User).where(User.id == user_id))
             user = result.scalar_one()
             user.has_chat_access = True
             await session.commit()
             await session.refresh(user)
+            return user
 
 
 class NotFoundError(Exception):

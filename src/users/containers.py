@@ -12,6 +12,6 @@ class UserContainer(containers.DeclarativeContainer):
     password_hasher = providers.Callable(passlib.hash.pbkdf2_sha256.hash)
 
     # repositories
-    user_repository = providers.Singleton(UserRepository, session)
+    user_repository = providers.Factory(UserRepository, session)
     # service
-    user_service = providers.Singleton(UserService, user_repository, password_hasher.provider, boto3_service)
+    user_service = providers.Factory(UserService, user_repository, password_hasher.provider, boto3_service)
