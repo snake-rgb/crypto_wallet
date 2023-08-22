@@ -1,4 +1,10 @@
+import logging
+
+from celery import Celery
 from dependency_injector import providers, containers
+
+from config import settings
+from config_celery import celery_config
 from src.core.containers import CoreContainer
 from src.parser.containers import ParserContainer
 from src.users.containers import UserContainer
@@ -14,7 +20,7 @@ class RegisterContainer(containers.DeclarativeContainer):
             'config',
             'config_fastapi',
             'config_socketio',
-            'config_celery',
+            # 'config_celery',
             'src.core',
             'src.api',
             'src.auth',
@@ -24,12 +30,18 @@ class RegisterContainer(containers.DeclarativeContainer):
             'src.parser',
             'src.users',
             'src.wallet',
-        ]
+        ],
+    )
+
+    celery = providers.Singleton(
+        Celery,
+        broker=settings.RABBITMQ_URL,
+        include=['src.users.tasks', ],
+        backend=settings.CELERY_RESULT_BACKEND
     )
     api_container = providers.Container(APIContainer)
     core_container = providers.Container(CoreContainer)
     boto3_container = providers.Container(Boto3Container, session=core_container.session)
-
     user_container = providers.Container(
         UserContainer,
         session=core_container.session,
@@ -52,4 +64,5 @@ class RegisterContainer(containers.DeclarativeContainer):
     parser_container = providers.Container(
         ParserContainer,
         web3_api=api_container.web3_api,
+        wallet_service=wallet_container.wallet_service
     )

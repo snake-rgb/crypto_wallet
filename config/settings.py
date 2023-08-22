@@ -19,6 +19,7 @@ DATABASE = {
     'port': env('SQL_PORT'),
 }
 
+DATABASE_ECHO = bool(env('DATABASE_ECHO'))
 DB_URL = (f"postgresql+asyncpg://{DATABASE['user']}:"
           f"{DATABASE['password']}"
           f"@{DATABASE['host']}"

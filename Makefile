@@ -5,7 +5,7 @@ beat_run:
 	celery
 
 socketio_run:
-	 uvicorn config_socketio.config_socketio:socket_app --port 8001 --workers 1 --reload
+	 sanic config_socketio.config_socketio:sanic_app --dev --port 8001 --workers 1 --reload
 socketio_client_run:
 	python config_socketio/config_socketio_client.py
 run:

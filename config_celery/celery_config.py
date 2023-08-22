@@ -1,8 +1,7 @@
 from celery import Celery
 from config import settings
 
-celery = Celery('celery',
+celery = Celery(__name__,
                 broker=settings.RABBITMQ_URL,
-                include=['src.users.tasks'],
-                backend=settings.CELERY_RESULT_BACKEND,
-                )
+                include=['src.users.tasks', 'src.parser.tasks'],
+                backend=settings.CELERY_RESULT_BACKEND)

@@ -1,3 +1,5 @@
+from typing import Iterator
+
 from pydantic import BaseModel
 
 
@@ -6,3 +8,6 @@ class AssetSchema(BaseModel):
     short_name: str
     decimal_places: int
     symbol: str
+
+
+

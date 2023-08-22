@@ -1,7 +1,12 @@
+from typing import Iterator
+
 import hexbytes
 from fastapi import HTTPException
 from eth_account import Account
 import secrets
+
+from hexbytes import HexBytes
+
 from src.api.moralis_api import MoralisAPI
 from src.api.web3_api import Web3API
 from src.auth.dependencies.jwt_auth import decode_token
@@ -48,7 +53,7 @@ class WalletService:
     async def get_balance(self, address: str) -> float:
         return await self.web3_api.get_balance(address)
 
-    async def send_transaction(self, from_address: str, to_address: str, amount: float) -> str:
+    async def send_transaction(self, from_address: HexBytes, to_address: HexBytes, amount: float) -> str:
         sender_wallet = await self.wallet_repository.get_wallet(from_address)
         gas_price = await self.web3_api.web3.eth.gas_price
         # gas_amount
@@ -68,12 +73,6 @@ class WalletService:
         signed_transaction = await self.web3_api.sign_transaction(transaction=transaction,
                                                                   private_key=sender_wallet.private_key)
 
-        # block_data = self.web3_api.web3.eth.get_block(4073775)
-        # # for transaction_block in block_data.transactions:
-        # #     if hexbytes.HexBytes(transaction_block).hex() == transaction.hash:
-        # #         print(await self.get_transaction_by_hash(transaction.hash))
-        # #
-        # # return transaction
         transaction_hash = await self.web3_api.send_raw_transaction(signed_transaction=signed_transaction)
 
         db_transaction = await self.wallet_repository.create_transaction(
@@ -109,3 +108,6 @@ class WalletService:
         if image_url:
             asset_schema.image = image_url
         return await self.wallet_repository.create_asset(asset_schema)
+
+    async def get_wallets_address_in_block(self, wallet_address: list) -> Iterator[str]:
+        return await self.wallet_repository.get_wallets_address_in_block(wallet_address)

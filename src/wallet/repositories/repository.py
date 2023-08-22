@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Callable, Iterator
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.wallet.models import Wallet, Transaction, Asset
@@ -101,3 +101,10 @@ class WalletRepository:
             await session.commit()
             await session.refresh(asset)
             return asset
+
+    async def get_wallets_address_in_block(self, wallet_address: list) -> Iterator[str]:
+        async with self.session_factory() as session:
+            result = await session.execute(select(Wallet).where(Wallet.address.in_(wallet_address)))
+            wallets = result.scalars().all()
+            wallets_address = [wallet.address for wallet in wallets]
+            return wallets_address

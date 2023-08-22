@@ -8,8 +8,7 @@ socketio_client = socketio.AsyncClient()
 # Обработчик события "connect"
 @socketio_client.on('connect')
 async def on_connect():
-    print('Подключено к серверу Socket.IO')
-    await socketio_client.emit('test', data={})
+    print('Подключено к чату')
 
 
 async def main():
