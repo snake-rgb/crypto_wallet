@@ -6,13 +6,14 @@ from eth_account import Account
 import secrets
 
 from hexbytes import HexBytes
+from web3.datastructures import AttributeDict
 
 from src.api.moralis_api import MoralisAPI
 from src.api.web3_api import Web3API
 from src.auth.dependencies.jwt_auth import decode_token
 from src.boto3.services.boto3 import Boto3Service
 from src.users.services.user import UserService
-from src.wallet.models import Wallet, Asset
+from src.wallet.models import Wallet, Asset, Transaction
 from src.wallet.repositories.repository import WalletRepository
 from src.wallet.schemas import AssetSchema
 
@@ -53,20 +54,19 @@ class WalletService:
     async def get_balance(self, address: str) -> float:
         return await self.web3_api.get_balance(address)
 
-    async def send_transaction(self, from_address: HexBytes, to_address: HexBytes, amount: float) -> str:
+    async def send_transaction(self, from_address: str, to_address: str, amount: float) -> str:
         sender_wallet = await self.wallet_repository.get_wallet(from_address)
-        gas_price = await self.web3_api.web3.eth.gas_price
         # gas_amount
-        gas = 2_000_000
-
+        gas = 21000
         nonce = await self.web3_api.web3.eth.get_transaction_count(from_address)
+
         transaction = {
             'chainId': await self.web3_api.web3.eth.chain_id,
             'from': from_address,
             'to': to_address,
             'value': await self.web3_api.convert_ether_to_wei(amount),
             'nonce': nonce,
-            'gasPrice': self.web3_api.web3.to_wei('5', 'gwei'),
+            'gasPrice': self.web3_api.web3.to_wei('50', 'gwei'),
             'gas': gas,
         }
 
@@ -87,8 +87,8 @@ class WalletService:
         response = await self.moralis_api.get_native_transactions(address, limit)
         return response
 
-    async def get_transaction_by_hash(self, transaction_hase: str) -> dict:
-        response = await self.moralis_api.get_transaction_by_hash(transaction_hase=transaction_hase)
+    async def get_transaction_by_hash(self, transaction_hash: str) -> AttributeDict:
+        response: AttributeDict = await self.web3_api.web3.eth.get_transaction(transaction_hash=transaction_hash)
         return response
 
     async def import_wallet(self, private_key: str, access_token: str) -> Wallet:
@@ -103,11 +103,11 @@ class WalletService:
         else:
             raise HTTPException(status_code=400, detail='Wallet exception')
 
-    async def create_asset(self, asset_schema: AssetSchema) -> Asset:
-        image_url = await self.boto3_service.upload_image(asset_schema.image)
-        if image_url:
-            asset_schema.image = image_url
-        return await self.wallet_repository.create_asset(asset_schema)
-
     async def get_wallets_address_in_block(self, wallet_address: list) -> Iterator[str]:
         return await self.wallet_repository.get_wallets_address_in_block(wallet_address)
+
+    async def get_transaction_receipt(self, transaction_hash: str) -> AttributeDict:
+        return await self.web3_api.web3.eth.get_transaction_receipt(transaction_hash)
+
+    async def get_transaction_by_id(self, transaction_id: int) -> Transaction:
+        return await self.wallet_repository.get_transaction_by_id(transaction_id)

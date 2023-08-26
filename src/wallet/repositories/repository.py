@@ -1,5 +1,8 @@
-from typing import Callable, Iterator
-from sqlalchemy import select
+import datetime
+from decimal import Decimal, getcontext
+from typing import Callable, Iterator, Optional
+from hexbytes import HexBytes
+from sqlalchemy import select, bindparam, update, insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.wallet.models import Wallet, Transaction, Asset
 from src.wallet.schemas import AssetSchema
@@ -34,26 +37,44 @@ class WalletRepository:
             wallet = result.scalar_one()
             return wallet
 
-    async def create_transaction(self, transaction_hash: str,
+    async def create_transaction(self, transaction_hash: HexBytes,
                                  from_address: str,
                                  to_address: str,
-                                 value: str,
+                                 value: float,
+                                 fee: Optional[float] = None,
+                                 age: Optional[datetime.datetime] = None,
+                                 status: Optional[bool] = None,
                                  ) -> Transaction:
         async with self.session_factory() as session:
-            transaction = Transaction(
-                hash=transaction_hash,
-                from_address=from_address,
-                to_address=to_address,
-                value=value,
-            )
-            session.add(transaction)
-            await session.commit()
-            await session.refresh(transaction)
-            return transaction
+            query = await session.execute(
+                select(Transaction).where(Transaction.hash == transaction_hash.hex()))
+            existing_transaction: Transaction = query.scalar_one_or_none()
+            if existing_transaction:
+                existing_transaction.status = 'SUCCESS' if status else 'FAILED'
+                existing_transaction.age = age
+                existing_transaction.fee = fee
+                session.add(existing_transaction)
+                await session.commit()
+                await session.refresh(existing_transaction)
+                return existing_transaction
+            else:
+                transaction = Transaction(
+                    hash=transaction_hash.hex(),
+                    from_address=from_address,
+                    to_address=to_address,
+                    value=value,
+                    age=age,
+                    fee=fee,
+                    status='SUCCESS' if status else 'PENDING',
+                )
+                session.add(transaction)
+                await session.commit()
+                await session.refresh(transaction)
+                return transaction
 
     async def set_balance(self, balance: float, address: str) -> Wallet:
         """
-        Method for set wallet balance after import or any other operations
+        Method for set wallet balance after import
         :param balance: balance in ether
         :param address: wallet address
         :return: wallet instance
@@ -74,6 +95,22 @@ class WalletRepository:
             await session.refresh(wallet)
             return wallet
 
+    async def change_balance(self, value: float, address: str, operation_type: str) -> Wallet:
+        async with self.session_factory() as session:
+            getcontext().prec = 18
+            # get wallet
+            result = await session.execute(select(Wallet).where(Wallet.address == address))
+            wallet: Wallet = result.scalar_one_or_none()
+
+            if operation_type == 'add' and wallet:
+                wallet.balance += Decimal(value)
+            elif operation_type == 'subtract' and wallet:
+                wallet.balance -= Decimal(value)
+            if wallet:
+                session.add(wallet)
+                await session.commit()
+                await session.refresh(wallet)
+
     async def import_wallet(self, private_key: str, address: str, user_id: int) -> Wallet:
         async with self.session_factory() as session:
             wallet = Wallet(
@@ -89,18 +126,18 @@ class WalletRepository:
             await session.refresh(wallet)
             return wallet
 
-    async def create_asset(self, asset_schema: AssetSchema) -> Asset:
-        async with self.session_factory() as session:
-            asset = Asset(
-                image=asset_schema.image,
-                short_name=asset_schema.short_name,
-                decimal_places=asset_schema.decimal_places,
-                symbol=asset_schema.symbol,
-            )
-            session.add(asset)
-            await session.commit()
-            await session.refresh(asset)
-            return asset
+    # async def create_asset(self, asset_schema: AssetSchema) -> Asset:
+    #     async with self.session_factory() as session:
+    #         asset = Asset(
+    #             image=asset_schema.image,
+    #             short_name=asset_schema.short_name,
+    #             decimal_places=asset_schema.decimal_places,
+    #             symbol=asset_schema.symbol,
+    #         )
+    #         session.add(asset)
+    #         await session.commit()
+    #         await session.refresh(asset)
+    #         return asset
 
     async def get_wallets_address_in_block(self, wallet_address: list) -> Iterator[str]:
         async with self.session_factory() as session:
@@ -108,3 +145,14 @@ class WalletRepository:
             wallets = result.scalars().all()
             wallets_address = [wallet.address for wallet in wallets]
             return wallets_address
+
+    # TODO: Сделать апдейт множества транзакций
+    async def create_transaction_bulk(self, transactions: list[dict]) -> None:
+        async with self.session_factory() as session:
+            await session.commit()
+
+    async def get_transaction_by_id(self, transaction_id: int) -> Transaction:
+        async with self.session_factory() as session:
+            query = await session.execute(select(Transaction).where(Transaction.id == transaction_id))
+            transaction = query.scalar_one()
+            return transaction

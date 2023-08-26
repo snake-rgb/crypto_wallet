@@ -47,10 +47,10 @@ class Blockchain(Base):
 class Transaction(Base):
     __tablename__ = 'transactions'
     id = Column(Integer, primary_key=True, unique=True)
-    hash = Column(String)
+    hash = Column(String, unique=True)
     from_address = Column(String)
     to_address = Column(String)
-    value = Column(DECIMAL(precision=30, scale=18))
+    value = Column(DECIMAL())
     age = Column(DateTime(), default=datetime.datetime.utcnow())
-    fee = Column(DECIMAL(precision=30, scale=18))
+    fee = Column(DECIMAL())
     status = Column(String, default='PENDING')

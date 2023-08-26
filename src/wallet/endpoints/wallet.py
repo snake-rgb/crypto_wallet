@@ -1,6 +1,10 @@
+import pickle
+
 from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Depends
 from fastapi.security import HTTPAuthorizationCredentials
+from hexbytes import HexBytes
+
 from src.auth.endpoints.auth import user_auth
 from src.core.register import RegisterContainer
 from src.wallet.schemas import AssetSchema
@@ -43,12 +47,12 @@ async def get_wallet_transactions(
 )
 @inject
 async def get_transaction_by_hash(
-        transaction_hase: str,
+        transaction_hash: str,
         wallet_service: WalletService = Depends(Provide[RegisterContainer.wallet_container.wallet_service]),
         bearer: HTTPAuthorizationCredentials = Depends(user_auth),
 ):
-    response = await wallet_service.get_transaction_by_hash(transaction_hase=transaction_hase)
-    return {'response': response}
+    response = await wallet_service.get_transaction_by_hash(transaction_hash=transaction_hash)
+    return {'response': response.__repr__()}
 
 
 @wallet_router.post(
@@ -67,7 +71,7 @@ async def get_balance(
 
 
 @wallet_router.post(
-    '/wallet/send/',
+    '/wallet/send-transaction/',
 
 )
 @inject
@@ -100,16 +104,15 @@ async def import_wallet(
     response = await wallet_service.import_wallet(private_key, bearer.credentials)
     return {'response': response}
 
-
-@wallet_router.post(
-    path='/asset/create/',
-)
-@inject
-async def create_asset(
-        asset_schema: AssetSchema,
-        wallet_service: WalletService = Depends(Provide[RegisterContainer.wallet_container.wallet_service]),
-        bearer: HTTPAuthorizationCredentials = Depends(user_auth),
-
-):
-    response = await wallet_service.create_asset(asset_schema)
-    return {'response': response}
+# @wallet_router.post(
+#     path='/asset/create/',
+# )
+# @inject
+# async def create_asset(
+#         asset_schema: AssetSchema,
+#         wallet_service: WalletService = Depends(Provide[RegisterContainer.wallet_container.wallet_service]),
+#         bearer: HTTPAuthorizationCredentials = Depends(user_auth),
+#
+# ):
+#     response = await wallet_service.create_asset(asset_schema)
+#     return {'response': response}

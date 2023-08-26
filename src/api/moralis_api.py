@@ -20,8 +20,8 @@ class MoralisAPI:
                 raise HTTPException(status_code=response.status_code,
                                     detail=f'Api error {response.status_code} - {response.json()}')
 
-    async def get_transaction_by_hash(self, transaction_hase: str) -> dict:
-        url = f'https://deep-index.moralis.io/api/v2/transaction/{transaction_hase}?chain=sepolia'
+    async def get_transaction_by_hash(self, transaction_hash: str) -> dict:
+        url = f'https://deep-index.moralis.io/api/v2/transaction/{transaction_hash}?chain=sepolia'
         headers = {
             "X-API-Key": self.api_key
         }

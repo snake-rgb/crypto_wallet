@@ -5,7 +5,9 @@ from dependency_injector import providers, containers
 
 from config import settings
 from config_celery import celery_config
+from src.chat.containers import ChatContainer
 from src.core.containers import CoreContainer
+from src.ibay.containers import IbayContainer
 from src.parser.containers import ParserContainer
 from src.users.containers import UserContainer
 from src.wallet.containers import WalletContainer
@@ -30,6 +32,7 @@ class RegisterContainer(containers.DeclarativeContainer):
             'src.parser',
             'src.users',
             'src.wallet',
+            'src.chat'
         ],
     )
 
@@ -41,7 +44,9 @@ class RegisterContainer(containers.DeclarativeContainer):
     )
     api_container = providers.Container(APIContainer)
     core_container = providers.Container(CoreContainer)
-    boto3_container = providers.Container(Boto3Container, session=core_container.session)
+    boto3_container = providers.Container(
+        Boto3Container,
+        session=core_container.session)
     user_container = providers.Container(
         UserContainer,
         session=core_container.session,
@@ -65,4 +70,17 @@ class RegisterContainer(containers.DeclarativeContainer):
         ParserContainer,
         web3_api=api_container.web3_api,
         wallet_service=wallet_container.wallet_service
+    )
+    ibay_container = providers.Container(
+        IbayContainer,
+        session=core_container.session,
+        boto3_service=boto3_container.boto3_service,
+        wallet_service=wallet_container.wallet_service,
+    )
+
+    chat_container = providers.Container(
+        ChatContainer,
+        session=core_container.session,
+        boto3_service=boto3_container.boto3_service,
+
     )

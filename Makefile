@@ -1,6 +1,7 @@
 celery_run:
 	celery -A config_celery.celery_config:celery worker --loglevel=INFO
-
+make flower_run:
+	celery --broker=amqp://guest:guest@localhost:5672// flower
 beat_run:
 	celery
 

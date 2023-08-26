@@ -11,6 +11,11 @@ async def on_connect():
     print('Подключено к чату')
 
 
+@socketio_client.on('chat_message')
+async def chat_message():
+    print('hlkdfghkld')
+
+
 async def main():
     # Подключаемся к серверу Socket.IO
     await socketio_client.connect('http://localhost:8001')
