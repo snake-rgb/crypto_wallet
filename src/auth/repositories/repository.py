@@ -21,8 +21,8 @@ class AuthRepository:
     async def login(self, login_scheme: LoginScheme) -> User:
         async with self.session_factory() as session:
             result = await session.execute(select(User).where(User.email == login_scheme.email))
-            user = result.scalar_one()
-            if not user:
+            user = result.scalar_one_or_none()
+            if user is None:
                 raise UserNotFoundError(login_scheme.email)
             else:
                 if passlib.hash.pbkdf2_sha256.verify(login_scheme.password, user.password):

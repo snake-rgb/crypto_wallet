@@ -1,31 +1,16 @@
-import logging
-from celery.result import AsyncResult
-from propan.brokers.rabbit import RabbitExchange, ExchangeType
+from propan.brokers.rabbit import RabbitExchange
+
 from config_socketio.config_socketio import socket_rabbit_router
 from src.core.register import RegisterContainer
 from src.parser.services.parser import ParserService
-from src.parser.tasks import parse_block
 
-redis = RegisterContainer.parser_container.redis()
-
-socketio_exchange = RabbitExchange(name='socketio', type=ExchangeType.FANOUT)
-logger = logging.getLogger(__name__)
-celery = RegisterContainer.celery()
+parser_exchange = RabbitExchange(name='parser_exchange')
 
 
-@socket_rabbit_router.handle('last_block_event')
-async def last_block_event(
+@socket_rabbit_router.handle('start_parse', exchange=parser_exchange)
+async def start_parse(
         block_number: str,
 ) -> None:
     parser_service: ParserService = RegisterContainer.parser_container.parser_service()
     block_number: int = int(block_number)
-
-    # block numbers from redis and web3
-    redis_last_block_bytes: bytes = await redis.get('last_block_number')
-    redis_last_block_number: int = int(redis_last_block_bytes.decode('utf-8'))
-    print(f'{redis_last_block_number} - {block_number}')
-    while redis_last_block_number < block_number:
-        # run task
-        result = parse_block.apply_async(args=[redis_last_block_number])
-        redis_last_block_number += 1
-    await redis.set('last_block_number', block_number)
+    await parser_service.start_parse(block_number=block_number)

@@ -11,7 +11,5 @@ class ProductSchema(BaseModel):
 
 
 class OrderSchema(BaseModel):
-    transaction_id: int
-    return_transaction_id: Optional[int] = None
+    from_address: str
     product_id: int
-    status: str

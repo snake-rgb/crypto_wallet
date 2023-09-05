@@ -1,16 +1,22 @@
+import asyncio
+import datetime
+
 from celery import Celery
 from fastapi import FastAPI, Request
+from hexbytes import HexBytes
 from propan import RabbitBroker
 from starlette.responses import HTMLResponse
 from starlette.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
 from config import settings
-from src.api.web3_api import Web3API
+from src.web3.web3_api import Web3API
+from src.ibay.services.ibay import IbayService
 from src.wallet.service.wallet import WalletService
 from .routers import init_routers
 from config_socketio.config_socketio import socket_rabbit_router, sio, sanic_app
 from src.core.database import Database
 from src.core.register import RegisterContainer
+from src.delivery.google_request import run_delivery
 
 templates = Jinja2Templates(directory='templates')
 broker = RabbitBroker(settings.RABBITMQ_URL, timeout=120)
@@ -69,5 +75,14 @@ async def shutdown():
 @app.get('/test/hello/')
 async def test(
 ):
+    ibay_service: IbayService = RegisterContainer.ibay_container.ibay_service()
+    hash = b'\t\xe2\xb1"\xcf\xa9\'\xe6\xfe\xd8bk\x136:\x12\x91\x15\xfe\x7fm+gK\xf6z\xdd*v\xc9\xf6\xaa'.hex()
+    print(hash)
+
+
+@app.get('/last-block/')
+async def set_last_block(
+):
     web3_api: Web3API = RegisterContainer.api_container.web3_api()
-    wallet_service: WalletService = RegisterContainer.wallet_container.wallet_service()
+    redis = RegisterContainer.parser_container.redis()
+    await redis.set('last_block_number', await web3_api.get_block_number_latest())

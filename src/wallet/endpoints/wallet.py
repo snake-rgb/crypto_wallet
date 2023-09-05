@@ -1,13 +1,12 @@
-import pickle
-
 from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Depends
 from fastapi.security import HTTPAuthorizationCredentials
-from hexbytes import HexBytes
-
+from src.auth.dependencies import jwt_auth
 from src.auth.endpoints.auth import user_auth
 from src.core.register import RegisterContainer
-from src.wallet.schemas import AssetSchema
+from src.users.models import User
+from src.users.services.user import UserService
+from src.wallet.models import Wallet
 from src.wallet.service.wallet import WalletService
 
 wallet_router = APIRouter(tags=['wallet'])
@@ -21,9 +20,17 @@ wallet_router = APIRouter(tags=['wallet'])
 async def create_wallet(
         asset_id: int,
         wallet_service: WalletService = Depends(Provide[RegisterContainer.wallet_container.wallet_service]),
+        user_service: UserService = Depends(Provide[RegisterContainer.user_container.user_service]),
         bearer: HTTPAuthorizationCredentials = Depends(user_auth),
 ):
-    response = await wallet_service.create_wallet(bearer.credentials, asset_id)
+    payload: dict = jwt_auth.decode_token(bearer.credentials)
+    # get user
+    if payload:
+        user: User = await user_service.get_user_by_id(payload.get('user_id'))
+    else:
+        user: User = await user_service.get_user_by_id(1)
+
+    response: Wallet = await wallet_service.create_wallet(user.id, asset_id)
     return {'response': response}
 
 
@@ -52,7 +59,7 @@ async def get_transaction_by_hash(
         bearer: HTTPAuthorizationCredentials = Depends(user_auth),
 ):
     response = await wallet_service.get_transaction_by_hash(transaction_hash=transaction_hash)
-    return {'response': response.__repr__()}
+    return response
 
 
 @wallet_router.post(
@@ -103,16 +110,3 @@ async def import_wallet(
 ):
     response = await wallet_service.import_wallet(private_key, bearer.credentials)
     return {'response': response}
-
-# @wallet_router.post(
-#     path='/asset/create/',
-# )
-# @inject
-# async def create_asset(
-#         asset_schema: AssetSchema,
-#         wallet_service: WalletService = Depends(Provide[RegisterContainer.wallet_container.wallet_service]),
-#         bearer: HTTPAuthorizationCredentials = Depends(user_auth),
-#
-# ):
-#     response = await wallet_service.create_asset(asset_schema)
-#     return {'response': response}

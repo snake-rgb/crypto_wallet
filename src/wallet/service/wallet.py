@@ -1,113 +1,212 @@
+import datetime
 from typing import Iterator
-
-import hexbytes
 from fastapi import HTTPException
 from eth_account import Account
 import secrets
-
-from hexbytes import HexBytes
+from propan import RabbitBroker
 from web3.datastructures import AttributeDict
-
-from src.api.moralis_api import MoralisAPI
-from src.api.web3_api import Web3API
-from src.auth.dependencies.jwt_auth import decode_token
-from src.boto3.services.boto3 import Boto3Service
-from src.users.services.user import UserService
-from src.wallet.models import Wallet, Asset, Transaction
+from config import settings
+from src.wallet.models import Wallet, Transaction
 from src.wallet.repositories.repository import WalletRepository
-from src.wallet.schemas import AssetSchema
 
 
 class WalletService:
 
     def __init__(self, wallet_repository: WalletRepository,
-                 user_service: UserService,
-                 moralis_api: MoralisAPI,
-                 web3_api: Web3API,
-                 boto3_service: Boto3Service,
                  ) -> None:
         self.wallet_repository = wallet_repository
-        self.user_service = user_service
-        self.moralis_api = moralis_api
-        self.web3_api = web3_api
-        self.boto3_service = boto3_service
 
-    async def create_wallet(self, access_token: str, asset_id: int) -> Wallet:
-        payload = decode_token(access_token)
-        # get user
-        if payload:
-            user = await self.user_service.get_user_by_id(payload.get('user_id'))
-        else:
-            user = await self.user_service.get_user_by_id(1)
-
+    async def create_wallet(self, user_id: int, asset_id: int) -> Wallet:
         # random string hex
         private = secrets.token_hex(32)
-
         private_key = "0x" + private
-
         # create account
         account = Account.from_key(private_key)
-
         return await self.wallet_repository.create_wallet(address=account.address, private_key=private_key,
-                                                          user_id=user.id, asset_id=asset_id)
+                                                          user_id=user_id, asset_id=asset_id)
 
-    async def get_balance(self, address: str) -> float:
-        return await self.web3_api.get_balance(address)
+    @staticmethod
+    async def get_balance(address: str) -> float:
+        async with RabbitBroker(settings.RABBITMQ_URL) as broker:
+            balance: float = await broker.publish({
+                'address': address, },
+                queue='get_balance',
+                exchange='web3_exchange',
+                callback=True)
+            return balance
 
-    async def send_transaction(self, from_address: str, to_address: str, amount: float) -> str:
+    async def send_transaction(self, from_address: str, to_address: str, amount: float) -> Transaction:
         sender_wallet = await self.wallet_repository.get_wallet(from_address)
         # gas_amount
         gas = 21000
-        nonce = await self.web3_api.web3.eth.get_transaction_count(from_address)
+        async with RabbitBroker(settings.RABBITMQ_URL) as broker:
+            nonce = await broker.publish({
+                'from_address': from_address
+            },
+                queue='get_transaction_count',
+                exchange='web3_exchange',
+                callback=True)
+            chain_id = await broker.publish({
+                'from_address': from_address
+            },
+                queue='chain_id',
+                exchange='web3_exchange',
+                callback=True)
+            value = await broker.publish({
+                'amount': amount
+            },
+                queue='convert_ether_to_wei',
+                exchange='web3_exchange',
+                callback=True)
+            gas_price = await broker.publish({
+                'price': 50,
+                'units': 'gwei'
+            },
+                queue='gas_price',
+                exchange='web3_exchange',
+                callback=True)
+            transaction: dict = await broker.publish({
+                'chainId': chain_id,
+                'from': from_address,
+                'to': to_address,
+                'value': value,
+                'nonce': nonce,
+                'gasPrice': gas_price,
+                'gas': gas,
+                'private_key': sender_wallet.private_key
+            },
+                queue='sign_transaction',
+                exchange='web3_exchange',
+                callback=True)
+            signed_transaction: dict = transaction
+            transaction_hash = await broker.publish(
+                signed_transaction,
+                queue='send_raw_transaction',
+                exchange='web3_exchange',
+                callback=True)
+            db_transaction = await self.wallet_repository.create_transaction(
+                transaction_hash=transaction_hash,
+                from_address=from_address,
+                to_address=to_address,
+                value=amount,
+            )
+            return db_transaction
 
-        transaction = {
-            'chainId': await self.web3_api.web3.eth.chain_id,
-            'from': from_address,
-            'to': to_address,
-            'value': await self.web3_api.convert_ether_to_wei(amount),
-            'nonce': nonce,
-            'gasPrice': self.web3_api.web3.to_wei('50', 'gwei'),
-            'gas': gas,
-        }
+    @staticmethod
+    async def get_wallet_transactions(address: str, limit: int) -> dict:
+        async with RabbitBroker(settings.RABBITMQ_URL) as broker:
+            transactions: dict = await broker.publish({
+                'address': address,
+                'limit': f'{limit}'
+            },
+                queue='get_native_transactions',
+                exchange='moralis_exchange',
+                callback=True
+            )
+            return transactions
 
-        signed_transaction = await self.web3_api.sign_transaction(transaction=transaction,
-                                                                  private_key=sender_wallet.private_key)
-
-        transaction_hash = await self.web3_api.send_raw_transaction(signed_transaction=signed_transaction)
-
-        db_transaction = await self.wallet_repository.create_transaction(
-            transaction_hash=transaction_hash,
-            from_address=from_address,
-            to_address=to_address,
-            value=amount,
-        )
-        return transaction_hash.hex()
-
-    async def get_wallet_transactions(self, address: str, limit: int) -> dict:
-        response = await self.moralis_api.get_native_transactions(address, limit)
-        return response
-
-    async def get_transaction_by_hash(self, transaction_hash: str) -> AttributeDict:
-        response: AttributeDict = await self.web3_api.web3.eth.get_transaction(transaction_hash=transaction_hash)
-        return response
+    @staticmethod
+    async def get_transaction_by_hash(transaction_hash: str) -> dict:
+        async with RabbitBroker(settings.RABBITMQ_URL) as broker:
+            transaction: AttributeDict = await broker.publish({
+                'transaction_hash': transaction_hash,
+            },
+                queue='get_transaction_by_hash',
+                exchange='web3_exchange',
+                callback=True
+            )
+            return transaction
 
     async def import_wallet(self, private_key: str, access_token: str) -> Wallet:
         account = Account.from_key(private_key)
         address = account.address
         balance = await self.get_balance(address)
-        user = await self.user_service.profile(access_token)
-        if balance and user:
-            wallet = await self.wallet_repository.import_wallet(private_key, address, user_id=user.id)
-            await self.wallet_repository.set_balance(balance, wallet.address)
-            return wallet
-        else:
-            raise HTTPException(status_code=400, detail='Wallet exception')
+        async with RabbitBroker(settings.RABBITMQ_URL) as broker:
+            user_id: int = await broker.publish({
+                'access_token': access_token,
+            },
+                queue='get_user_id',
+                exchange='user_exchange',
+                callback=True
+            )
+            if balance and user_id:
+                wallet = await self.wallet_repository.import_wallet(private_key, address, user_id=user_id)
+                await self.wallet_repository.set_balance(balance, wallet.address)
+                return wallet
+            else:
+                raise HTTPException(status_code=400, detail='Wallet exception')
 
-    async def get_wallets_address_in_block(self, wallet_address: list) -> Iterator[str]:
-        return await self.wallet_repository.get_wallets_address_in_block(wallet_address)
+    async def get_wallets_address_in_block(self, wallet_address: list) -> list[str]:
+        return set(await self.wallet_repository.get_wallets_address_in_block(wallet_address))
 
-    async def get_transaction_receipt(self, transaction_hash: str) -> AttributeDict:
-        return await self.web3_api.web3.eth.get_transaction_receipt(transaction_hash)
+    @staticmethod
+    async def get_transaction_receipt(transaction_hash: str) -> AttributeDict:
+        async with RabbitBroker(settings.RABBITMQ_URL) as broker:
+            transaction_receipt: dict = await broker.publish({
+                'transaction_hash': transaction_hash,
+            },
+                queue='get_transaction_receipt',
+                exchange='web3_exchange',
+                callback=True
+            )
+            return transaction_receipt
 
     async def get_transaction_by_id(self, transaction_id: int) -> Transaction:
         return await self.wallet_repository.get_transaction_by_id(transaction_id)
+
+    async def buy_product(self, data: dict) -> None:
+        from_address = data.get('from_address')
+        to_address = data.get('to_address')
+        amount = data.get('amount')
+        transaction = await self.send_transaction(from_address, to_address, amount)
+        async with RabbitBroker(settings.RABBITMQ_URL) as broker:
+            await broker.publish({
+                'product_id': data.get('product_id'),
+                'transaction_id': transaction.id,
+                'customer_id': data.get('customer_id'),
+            }, queue='create_order', exchange='ibay_exchange')
+
+    async def order_refund(self, data) -> None:
+        from_address = data.get('from_address')
+        to_address = data.get('to_address')
+        amount = data.get('amount')
+        transaction = await self.send_transaction(from_address, to_address, amount)
+        async with RabbitBroker(settings.RABBITMQ_URL) as broker:
+            await broker.publish({
+                'order_id': data.get('order_id'),
+                'return_transaction_id': transaction.id,
+                'customer_id': data.get('customer_id'),
+            }, queue='order_refund', exchange='ibay_exchange')
+
+    async def create_transaction(
+            self,
+            transaction_hash: str,
+            from_address: str,
+            to_address: str,
+            value: float,
+            age: datetime.datetime,
+            status: str,
+            fee: float,
+    ) -> Transaction:
+        transaction: Transaction = await self.wallet_repository.create_transaction(
+            transaction_hash=transaction_hash,
+            from_address=from_address,
+            to_address=to_address,
+            value=value,
+            age=age,
+            status=status,
+            fee=fee,
+        )
+        return transaction
+
+    async def change_balance(
+            self,
+            address: str,
+            value: float,
+            operation_type: str,
+    ):
+        return await self.wallet_repository.change_balance(
+            address=address,
+            value=value,
+            operation_type=operation_type,
+        )

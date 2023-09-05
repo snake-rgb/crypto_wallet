@@ -4,6 +4,7 @@ from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Depends
 from fastapi.security import HTTPAuthorizationCredentials
 from src.auth.endpoints.auth import user_auth
+from src.boto3.services.boto3 import Boto3Service
 from src.core.register import RegisterContainer
 from src.users.schemas import UserForm, ProfileSchema
 from src.users.services.user import UserService
@@ -49,7 +50,9 @@ async def delete_user_by_id(
 async def register(
         user_form: UserForm,
         user_service: UserService = Depends(Provide[RegisterContainer.user_container.user_service]),
+        boto3_service: Boto3Service = Depends(Provide[RegisterContainer.boto3_container.boto3_service]),
 ):
+    user_form.profile_image = await boto3_service.upload_image(user_form.profile_image)
     user = await user_service.register(user_form)
     if user:
         # user activation timer
@@ -77,6 +80,9 @@ async def profile(
 async def profile_edit(
         profile_schema: ProfileSchema,
         user_service: UserService = Depends(Provide[RegisterContainer.user_container.user_service]),
+        boto3_service: Boto3Service = Depends(Provide[RegisterContainer.boto3_container.boto3_service]),
         bearer: HTTPAuthorizationCredentials = Depends(user_auth),
 ):
+    if profile_schema.profile_image != '':
+        profile_schema.profile_image = await boto3_service.upload_image(profile_schema.profile_image)
     return {'response': await user_service.profile_edit(bearer.credentials, profile_schema=profile_schema)}

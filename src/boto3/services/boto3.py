@@ -3,8 +3,11 @@ import uuid
 from io import BytesIO
 import logging
 from botocore.exceptions import ClientError
+from propan import RabbitBroker
 
+from config import settings
 from src.boto3.repositories.repository import Boto3Repository
+from src.ibay.schemas import ProductSchema
 
 
 class Boto3Service:
@@ -38,7 +41,6 @@ class Boto3Service:
         return response
 
     async def upload_image(self, base64_image: str) -> str:
-
         # convert image to binary
         base64_image = base64_image.replace('data:image/jpeg;base64,', '')
         image_data = base64.b64decode(base64_image)
@@ -64,3 +66,24 @@ class Boto3Service:
             return public_url
         except Exception as e:
             print("Ошибка:", e)
+
+    # async def upload_product_image(
+    #         self,
+    #         base64_image: str,
+    #         name: str,
+    #         price: float,
+    #         wallet_address: str
+    # ) -> None:
+    #
+    #     image_url: str = await self.upload_image(base64_image)
+    #     print(image_url)
+    #     async with RabbitBroker(settings.RABBITMQ_URL) as broker:
+    #         await broker.publish(
+    #             ProductSchema(
+    #                 image=image_url,
+    #                 name=name,
+    #                 price=price,
+    #                 wallet_address=wallet_address
+    #             ).model_dump(),
+    #             queue='upload_product_image',
+    #             exchange='ibay_exchange')

@@ -3,15 +3,13 @@ from src.auth.dependencies.jwt_auth import create_access_token
 from src.auth.schemas import LoginScheme
 from src.auth.repositories.repository import AuthRepository
 from src.users.models import User
-# from src.users.services.user import UserService
 from fastapi import Response
 
 
 class AuthService:
 
-    def __init__(self, auth_repository: AuthRepository, user_service) -> None:
+    def __init__(self, auth_repository: AuthRepository) -> None:
         self.auth_repository = auth_repository
-        self.user_service = user_service
 
     async def login(self, login_scheme: LoginScheme, response: Response) -> User:
         user = await self.auth_repository.login(login_scheme)

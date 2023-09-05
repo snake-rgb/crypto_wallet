@@ -19,6 +19,6 @@ def parse_block(self, block_number: int):
         return {'block_number': block_number,
                 'task_time': task_time,
                 }
-    except Exception as ex:
-        if ex != ConnectionClosedOK:
-            self.retry(countdown=3 ** self.request.retries)
+
+    except TimeoutError as ex:
+        self.retry(countdown=3 ** self.request.retries)

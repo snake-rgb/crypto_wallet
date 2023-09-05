@@ -4,4 +4,5 @@ from config import settings
 celery = Celery(__name__,
                 broker=settings.RABBITMQ_URL,
                 include=['src.users.tasks', 'src.parser.tasks'],
-                backend=settings.CELERY_RESULT_BACKEND)
+                backend=settings.CELERY_RESULT_BACKEND,
+                broker_connection_retry_on_startup=True)

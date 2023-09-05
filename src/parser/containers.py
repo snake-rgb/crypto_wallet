@@ -6,7 +6,6 @@ from src.parser.services.parser import ParserService
 
 
 class ParserContainer(containers.DeclarativeContainer):
-    web3_api = providers.Dependency()
-    wallet_service = providers.Dependency()
+    celery = providers.Dependency()
     redis = providers.Singleton(aioredis.from_url, settings.REDIS_URL)
-    parser_service = providers.Singleton(ParserService, web3_api, redis, wallet_service)
+    parser_service = providers.Singleton(ParserService, celery, redis)

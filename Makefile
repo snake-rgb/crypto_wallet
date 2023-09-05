@@ -1,5 +1,5 @@
 celery_run:
-	celery -A config_celery.celery_config:celery worker --loglevel=INFO
+	celery -A config_celery.celery_config:celery worker --loglevel=INFO --concurrency 8
 make flower_run:
 	celery --broker=amqp://guest:guest@localhost:5672// flower
 beat_run:
@@ -11,6 +11,9 @@ socketio_client_run:
 	python config_socketio/config_socketio_client.py
 run:
 	uvicorn config_fastapi.app:app --reload --port 8000
+
+delivery_run:
+	python src/delivery/google_request.py
 
 makemigrations:
 	alembic revision --autogenerate

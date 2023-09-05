@@ -1,9 +1,13 @@
-from typing import Callable, Iterator, Optional
+from typing import Callable, Iterator
 from fastapi import HTTPException
-from sqlalchemy import select
+from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload
+
+from src.ibay.enums import OrderStatus
 from src.ibay.models import Product, Order
 from src.ibay.schemas import ProductSchema, OrderSchema
+from src.wallet.models import Transaction
 
 
 class IbayRepository:
@@ -38,15 +42,81 @@ class IbayRepository:
             else:
                 raise HTTPException(status_code=400, detail=f'Cant find product with id {product_id}')
 
-    async def create_order(self, order_schema: OrderSchema) -> Order:
+    async def create_order(self, product_id: int, transaction_id: int, customer_id: int) -> Order:
         async with self.session_factory() as session:
-            order = Order(
-                transaction_id=order_schema.transaction_id,
-                return_transaction_id=order_schema.return_transaction_id if order_schema.return_transaction_id else None,
-                product_id=order_schema.product_id,
-                status=order_schema.status,
+            order: Order = Order(
+                transaction_id=transaction_id,
+                product_id=product_id,
+                status=OrderStatus.NEW,
+                customer_id=customer_id,
             )
-            # session.add(order)
-            # await session.commit()
-            # await session.refresh(order)
+            session.add(order)
+            await session.commit()
+            await session.refresh(order)
+            return order
+
+    async def get_new_orders(self) -> list[Order]:
+        async with self.session_factory() as session:
+            query = await session.execute(
+                select(Order).options(joinedload(Order.transaction)).where(
+                    Order.status == OrderStatus.NEW))
+            orders = query.scalars().all()
+            return orders
+
+    async def get_refund_orders(self) -> list[Order]:
+        async with self.session_factory() as session:
+            query = await session.execute(
+                select(Order).options(joinedload(Order.return_transaction)).where(
+                    Order.status == OrderStatus.DELIVERY and Order.return_transaction_id.is_not(None)))
+            orders = query.scalars().all()
+            return orders
+
+    async def set_order_status(self, order_id: int, status: str) -> Order:
+        async with self.session_factory() as session:
+            query = await session.execute(
+                select(Order).options(joinedload(Order.transaction)).where(Order.id == order_id))
+            order: Order = query.scalar_one_or_none()
+            order.status = status
+            session.add(order)
+            await session.commit()
+            await session.refresh(order)
+
+    async def get_order_by_id(self, order_id: int) -> Order:
+        async with self.session_factory() as session:
+            query = await session.execute(
+                select(Order).options(joinedload(Order.transaction), joinedload(Order.product)).where(
+                    Order.id == order_id))
+            order = query.scalar_one_or_none()
+            if order:
+                return order
+            else:
+                raise HTTPException(status_code=400, detail=f'Cant find order with id {order_id}')
+
+    async def update_order(self, order_id: int, return_transaction_id: int, status: str) -> Order:
+        async with self.session_factory() as session:
+            query = await session.execute(
+                select(Order).options(joinedload(Order.transaction)).where(Order.id == order_id))
+            order: Order = query.scalar_one_or_none()
+            if order:
+                order.status = status
+                order.return_transaction_id = return_transaction_id
+                session.add(order)
+                await session.commit()
+                await session.refresh(order)
+                return order
+            else:
+                raise HTTPException(status_code=404, detail='Cant find order with this id')
+
+    async def get_user_orders(self, user_id: int) -> list[Order]:
+        async with self.session_factory() as session:
+            query = await session.execute(select(Order).where(Order.customer_id == user_id))
+            orders = query.scalars().all()
+            return orders
+
+    async def get_latest_delivery_order(self) -> Order:
+        async with self.session_factory() as session:
+            query = await session.execute(
+                select(Order).limit(1).where(Order.status == OrderStatus.DELIVERY,
+                                             Order.return_transaction_id.is_(None)).order_by(Order.date))
+            order = query.scalar_one_or_none()
             return order

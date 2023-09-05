@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.chat.models import Message
 from src.chat.schemas import MessageSchema
+from sqlalchemy import desc
 
 
 class ChatRepository:
@@ -24,6 +25,6 @@ class ChatRepository:
 
     async def get_messages(self, limit: int) -> list[Message]:
         async with self.session_factory() as session:
-            query = await session.execute(select(Message).order_by(Message.id.desc()))
+            query = await session.execute(select(Message).order_by(desc(Message.id)))
             messages = query.scalars().fetchmany(limit)
         return messages

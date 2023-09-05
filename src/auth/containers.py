@@ -5,10 +5,9 @@ from src.auth.services.auth import AuthService
 
 class AuthContainer(containers.DeclarativeContainer):
     session = providers.Dependency()
-    user_service = providers.Dependency()
 
     # repository
     auth_repository = providers.Factory(AuthRepository, session)
 
     # services
-    auth_service = providers.Factory(AuthService, auth_repository, user_service)
+    auth_service = providers.Factory(AuthService, auth_repository)

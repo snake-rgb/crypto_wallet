@@ -7,11 +7,10 @@ from src.users.services.user import UserService
 class UserContainer(containers.DeclarativeContainer):
     # DB session
     session = providers.Dependency()
-    boto3_service = providers.Dependency()
     # utils
     password_hasher = providers.Callable(passlib.hash.pbkdf2_sha256.hash)
 
     # repositories
     user_repository = providers.Factory(UserRepository, session)
     # service
-    user_service = providers.Factory(UserService, user_repository, password_hasher.provider, boto3_service)
+    user_service = providers.Factory(UserService, user_repository, password_hasher.provider)

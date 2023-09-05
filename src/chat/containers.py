@@ -6,6 +6,5 @@ from src.chat.service.chat import ChatService
 
 class ChatContainer(containers.DeclarativeContainer):
     session = providers.Dependency()
-    boto3_service = providers.Dependency()
     chat_repository = providers.Singleton(ChatRepository, session)
-    chat_service = providers.Singleton(ChatService, chat_repository, boto3_service)
+    chat_service = providers.Singleton(ChatService, chat_repository)

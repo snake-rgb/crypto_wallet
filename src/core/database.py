@@ -4,8 +4,6 @@ import logging
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from sqlalchemy.ext.declarative import declarative_base
 
-from config import settings
-
 Base = declarative_base()
 logger = logging.getLogger(__name__)
 
@@ -13,8 +11,6 @@ logger = logging.getLogger(__name__)
 class Database(Singleton):
     def __init__(self, db_url: str) -> None:
         super().__init__()
-
-        # self._engine = create_async_engine(db_url, echo=True)
         self._engine = create_async_engine(db_url, echo=False, future=True)
         self._session_factory = async_sessionmaker(self._engine, autoflush=False, expire_on_commit=False)
 

@@ -37,7 +37,7 @@ class WalletRepository:
             wallet = result.scalar_one()
             return wallet
 
-    async def create_transaction(self, transaction_hash: HexBytes,
+    async def create_transaction(self, transaction_hash: str,
                                  from_address: str,
                                  to_address: str,
                                  value: float,
@@ -47,7 +47,8 @@ class WalletRepository:
                                  ) -> Transaction:
         async with self.session_factory() as session:
             query = await session.execute(
-                select(Transaction).where(Transaction.hash == transaction_hash.hex()))
+                select(Transaction).where(Transaction.hash == transaction_hash))
+
             existing_transaction: Transaction = query.scalar_one_or_none()
             if existing_transaction:
                 existing_transaction.status = 'SUCCESS' if status else 'FAILED'
@@ -59,14 +60,15 @@ class WalletRepository:
                 return existing_transaction
             else:
                 transaction = Transaction(
-                    hash=transaction_hash.hex(),
+                    hash=transaction_hash,
                     from_address=from_address,
                     to_address=to_address,
                     value=value,
                     age=age,
                     fee=fee,
-                    status='SUCCESS' if status else 'PENDING',
+                    status='SUCCESS' if status else 'PENDING' if status is None else 'FAILED',
                 )
+
                 session.add(transaction)
                 await session.commit()
                 await session.refresh(transaction)
@@ -125,19 +127,6 @@ class WalletRepository:
             await session.commit()
             await session.refresh(wallet)
             return wallet
-
-    # async def create_asset(self, asset_schema: AssetSchema) -> Asset:
-    #     async with self.session_factory() as session:
-    #         asset = Asset(
-    #             image=asset_schema.image,
-    #             short_name=asset_schema.short_name,
-    #             decimal_places=asset_schema.decimal_places,
-    #             symbol=asset_schema.symbol,
-    #         )
-    #         session.add(asset)
-    #         await session.commit()
-    #         await session.refresh(asset)
-    #         return asset
 
     async def get_wallets_address_in_block(self, wallet_address: list) -> Iterator[str]:
         async with self.session_factory() as session:

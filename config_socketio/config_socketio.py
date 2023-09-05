@@ -1,14 +1,11 @@
 import asyncio
-
-import engineio
 import socketio
 from propan import RabbitRouter, RabbitBroker
-from propan.brokers.rabbit import RabbitExchange, ExchangeType
 from sanic import Sanic
 from socketio import AsyncAioPikaManager, AsyncServer
 from config import settings
 from config_fastapi.socketio_manager import fastapi_manager
-from src.api.web3_api import Web3API
+from src.web3.web3_api import Web3API
 from src.core.register import RegisterContainer
 from sanic.log import logger
 
@@ -40,7 +37,7 @@ async def get_block_latest(
         logger.info(f'{redis_last_block_number} - {latest_block_number}')
         # send last block number
         async with RabbitBroker(settings.RABBITMQ_URL) as broker:
-            await broker.publish(f'{latest_block_number}', queue='last_block_event')
+            await broker.publish(f'{latest_block_number}', queue='start_parse', exchange='parser_exchange')
 
         await asyncio.sleep(1)
 
@@ -59,7 +56,14 @@ async def disconnect(sid):
     print(f"Client {sid} disconnected")
 
 
+async def delivery():
+    while True:
+        await RegisterContainer().ibay_container.ibay_service().delivery()
+        await asyncio.sleep(5)
+
+
 sanic_app.add_task(get_block_latest())
+sanic_app.add_task(delivery())
 
 
 @sio.on("chat", namespace='/chat')
