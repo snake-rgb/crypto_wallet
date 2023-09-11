@@ -51,10 +51,10 @@ class EmailSchema(BaseModel):
 
 
 class ProfileSchema(BaseModel):
-    username: str
+    username: Optional[str] = None
     password: Optional[str] = None
     confirm_password: Optional[str] = None
-    profile_image: str
+    profile_image: Optional[str] = None
 
     @field_validator('password')
     @classmethod

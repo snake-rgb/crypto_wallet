@@ -19,7 +19,21 @@ DATABASE = {
     'port': env('SQL_PORT'),
 }
 
+DATABASE_TEST = {
+    'name': env('SQL_DB_NAME_TEST'),
+    'user': env('SQL_DB_USER_TEST'),
+    'password': env('SQL_DB_PASSWORD_TEST'),
+    'host': env('SQL_HOST_TEST'),
+    'port': env('SQL_PORT_TEST'),
+}
+
 DATABASE_ECHO = bool(env('DATABASE_ECHO'))
+DATABASE_TEST_URL = (f"postgresql+asyncpg://{DATABASE_TEST['user']}:"
+                     f"{DATABASE_TEST['password']}"
+                     f"@{DATABASE_TEST['host']}"
+                     f":{DATABASE_TEST['port']}"
+                     f"/{DATABASE_TEST['name']}")
+
 DB_URL = (f"postgresql+asyncpg://{DATABASE['user']}:"
           f"{DATABASE['password']}"
           f"@{DATABASE['host']}"

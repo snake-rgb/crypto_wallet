@@ -6,7 +6,6 @@ from fastapi.security import HTTPAuthorizationCredentials
 from propan import RabbitBroker
 from config import settings
 from src.auth.dependencies import jwt_auth
-from src.delivery.google_request import run_delivery
 from src.ibay.enums import OrderStatus
 from src.ibay.models import Product, Order
 from src.ibay.repositories.repository import IbayRepository
@@ -53,7 +52,11 @@ class IbayService:
 
     async def ordering(self, order_id: int, status: str) -> None:
         if status == OrderStatus.SUCCESS:
-            delivery_status: bool = await run_delivery()
+            async with RabbitBroker(settings.RABBITMQ_URL) as broker:
+                delivery_status: bool = await broker.publish({
+
+                },
+                    queue='run_delivery', exchange='delivery_exchange')
             await self.delivery_status(order_id, delivery_status)
         elif status == OrderStatus.REFUND:
             await self.ibay_repository.set_order_status(order_id, OrderStatus.REFUND)
@@ -71,12 +74,13 @@ class IbayService:
         order: Order = await self.ibay_repository.get_order_by_id(order_id)
         from_address: str = order.transaction.to_address
         to_address: str = order.transaction.from_address
-
+        # TODO: Make commission
+        fee = (order.transaction.fee * decimal.Decimal(1.5)) / (10 ** 18)
         async with RabbitBroker(settings.RABBITMQ_URL) as broker:
             await broker.publish({
                 'from_address': from_address,
                 'to_address': to_address,
-                'amount': order.product.price * decimal.Decimal(1.5),
+                'amount': order.product.price - fee,
                 'customer_id': order.customer_id,
                 'product_id': order.product.id,
                 'order_id': order.id
@@ -93,7 +97,7 @@ class IbayService:
     async def delivery(self) -> bool:
         order = await self.get_latest_delivery_order()
         if order:
-            delivery_chance: bool = bool(random.randrange(2))
+            delivery_chance: bool = bool(random.randrange(1))
             if delivery_chance:
                 await self.ibay_repository.set_order_status(order.id, OrderStatus.SUCCESS)
             else:

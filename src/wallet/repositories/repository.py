@@ -1,11 +1,12 @@
 import datetime
 from decimal import Decimal, getcontext
 from typing import Callable, Iterator, Optional
-from hexbytes import HexBytes
-from sqlalchemy import select, bindparam, update, insert
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload
+
+from src.wallet.enums import TransactionStatus
 from src.wallet.models import Wallet, Transaction, Asset
-from src.wallet.schemas import AssetSchema
 
 
 class WalletRepository:
@@ -43,7 +44,7 @@ class WalletRepository:
                                  value: float,
                                  fee: Optional[float] = None,
                                  age: Optional[datetime.datetime] = None,
-                                 status: Optional[bool] = None,
+                                 status: Optional[TransactionStatus] = None,
                                  ) -> Transaction:
         async with self.session_factory() as session:
             query = await session.execute(
@@ -135,13 +136,44 @@ class WalletRepository:
             wallets_address = [wallet.address for wallet in wallets]
             return wallets_address
 
-    # TODO: Сделать апдейт множества транзакций
     async def create_transaction_bulk(self, transactions: list[dict]) -> None:
         async with self.session_factory() as session:
-            await session.commit()
+            for transaction in transactions:
+                result = await session.execute(select(Transaction).where(Transaction.hash == transaction.get('hash')))
+                transaction_db: Transaction = result.scalar_one_or_none()
+
+                # Convert date from string
+                date_string = transaction.get('age')
+                date_format = '%Y-%m-%dT%H:%M:%S'
+                age = datetime.datetime.strptime(date_string, date_format)
+
+                if transaction_db:
+                    transaction_db.age = age
+                    transaction_db.fee = transaction.get('fee')
+                    # transaction_db.status = 'SUCCESS' if transaction.get('status') else 'FAILED'
+                    transaction_db.status = transaction.get('status')
+                else:
+                    transaction = Transaction(
+                        hash=transaction.get('hash'),
+                        from_address=transaction.get('from_address'),
+                        to_address=transaction.get('to_address'),
+                        value=transaction.get('value'),
+                        age=age,
+                        fee=transaction.get('fee'),
+                        status=transaction.get('status')
+                    )
+                    session.add(transaction)
+                await session.commit()
 
     async def get_transaction_by_id(self, transaction_id: int) -> Transaction:
         async with self.session_factory() as session:
             query = await session.execute(select(Transaction).where(Transaction.id == transaction_id))
             transaction = query.scalar_one()
             return transaction
+
+    async def get_user_wallets(self, user_id: int) -> list[Wallet]:
+        async with self.session_factory() as session:
+            query = await session.execute(
+                select(Wallet).options(joinedload(Wallet.asset)).where(Wallet.user_id == user_id))
+            wallets = query.scalars().all()
+            return wallets

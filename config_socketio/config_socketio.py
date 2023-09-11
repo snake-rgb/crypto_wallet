@@ -1,5 +1,6 @@
 import asyncio
 import socketio
+from aioredis import Redis
 from propan import RabbitRouter, RabbitBroker
 from sanic import Sanic
 from socketio import AsyncAioPikaManager, AsyncServer
@@ -16,7 +17,7 @@ sio: AsyncServer = socketio.AsyncServer(async_mode="sanic", cors_allowed_origins
                                         client_manager=manager, namespaces=['*'])
 sio.attach(sanic_app)
 socket_rabbit_router = RabbitRouter()
-redis = RegisterContainer.parser_container.redis()
+redis: Redis = RegisterContainer.parser_container.redis()
 
 
 @sanic_app.after_reload_trigger

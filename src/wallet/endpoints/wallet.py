@@ -7,6 +7,7 @@ from src.core.register import RegisterContainer
 from src.users.models import User
 from src.users.services.user import UserService
 from src.wallet.models import Wallet
+from src.wallet.schemas import WalletSchema
 from src.wallet.service.wallet import WalletService
 
 wallet_router = APIRouter(tags=['wallet'])
@@ -110,3 +111,24 @@ async def import_wallet(
 ):
     response = await wallet_service.import_wallet(private_key, bearer.credentials)
     return {'response': response}
+
+
+@wallet_router.get(
+    '/wallet/get-user-wallets/',
+
+)
+@inject
+async def get_user_wallets(
+        user_id: int,
+        wallet_service: WalletService = Depends(Provide[RegisterContainer.wallet_container.wallet_service]),
+        bearer: HTTPAuthorizationCredentials = Depends(user_auth),
+
+) -> dict:
+    response = await wallet_service.get_user_wallets(user_id)
+    wallets = [WalletSchema(
+        id=wallet.id,
+        address=wallet.address,
+        balance=wallet.balance,
+        asset_image=wallet.asset.image,
+    ) for wallet in response]
+    return {'wallets': wallets}

@@ -2,6 +2,7 @@ from typing import Callable
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.sql.functions import count
 
 from src.chat.models import Message
 from src.chat.schemas import MessageSchema
@@ -28,3 +29,9 @@ class ChatRepository:
             query = await session.execute(select(Message).order_by(desc(Message.id)))
             messages = query.scalars().fetchmany(limit)
         return messages
+
+    async def get_user_messages_count(self, user_id: int) -> int:
+        async with self.session_factory() as session:
+            query = await session.execute(select(Message).where(Message.user_id == user_id))
+            messages = query.scalars().all()
+        return len(messages)

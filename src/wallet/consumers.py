@@ -73,3 +73,11 @@ async def change_balance(
         value=data.get('value'),
         operation_type=data.get('operation_type'),
     )
+
+
+@socket_rabbit_router.handle('create_transaction_bulk', exchange=wallet_exchange)
+async def create_transaction_bulk(
+        data,
+):
+    wallet_service: WalletService = RegisterContainer.wallet_container.wallet_service()
+    await wallet_service.wallet_repository.create_transaction_bulk(data.get('transactions'))

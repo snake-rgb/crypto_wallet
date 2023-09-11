@@ -7,6 +7,7 @@ from propan import RabbitBroker
 from web3.datastructures import AttributeDict
 from web3.types import BlockData
 from config import settings
+from src.wallet.enums import TransactionStatus
 from src.wallet.models import Transaction
 
 
@@ -15,9 +16,7 @@ class ParserService:
         self.celery = celery
         self.redis = redis
 
-    # TODO: сделать bulk update для транзакций
     async def parse_block(self, block_number: int):
-        start_timer = time.perf_counter()
         block: dict = await self.get_block_data(block_number)
 
         # transaction age
@@ -41,10 +40,12 @@ class ParserService:
         new_transactions: list[AttributeDict] = [tx for tx in transactions if tx.get('hash') in transactions_hash]
 
         order_transactions: list[Transaction] = []
-
+        db_transactions = []
         # parse transaction
         for transaction in new_transactions:
             transaction_receipt = await self.get_transaction_receipt(transaction_hash=transaction.get('hash'))
+            transaction_status = TransactionStatus.SUCCESS if transaction_receipt.get(
+                'status') else TransactionStatus.FAILED
 
             # set Decimal precision
             getcontext().prec = 18
@@ -52,20 +53,19 @@ class ParserService:
             fee: float = (transaction.get('gas') * transaction.get('gasPrice')) / (10 ** 18)
             # eth amount
             amount: float = transaction.get('value') / (10 ** 18)
-
-            db_transaction = await self.create_transaction(
-                transaction_hash=transaction.get('hash'),
-                from_address=transaction.get('from'),
-                to_address=transaction.get('to'),
-                value=amount,
-                age=age,
-                status=transaction_receipt.get('status'),
-                fee=fee,
+            # add transaction in list for create or update
+            db_transactions.append(
+                {
+                    'hash': transaction.get('hash'),
+                    'from_address': transaction.get('from'),
+                    'to_address': transaction.get('to'),
+                    'value': amount,
+                    'age': age,
+                    'fee': fee,
+                    'status': transaction_status,
+                }
             )
 
-            print(f'hash - {db_transaction.get("transaction_hash")}, status - {db_transaction.get("status")}')
-
-            order_transactions.append(db_transaction)
             if transaction_receipt.get('status'):
                 await self.change_balance(
                     address=transaction.get('from'),
@@ -81,13 +81,12 @@ class ParserService:
             # TODO: Make method from this part
             async with RabbitBroker(settings.RABBITMQ_URL) as broker:
                 await broker.publish(
-                    [{'hash': tx.get("transaction_hash"), 'status': tx.get("status")} for tx in order_transactions],
+                    db_transactions,
                     queue='check_orders_status',
                     exchange='ibay_exchange')
-
-            end_timer = time.perf_counter()
-            execution_time = end_timer - start_timer
-            return execution_time
+            # create all transactions in db
+            await self.create_transaction_bulk(db_transactions)
+            print(db_transactions)
 
     async def start_parse(self, block_number: int):
         # block numbers from redis and web3
@@ -137,33 +136,6 @@ class ParserService:
             return transaction_receipt
 
     @staticmethod
-    async def create_transaction(
-            transaction_hash: str,
-            from_address: str,
-            to_address: str,
-            value: float,
-            age: datetime.datetime,
-            status: str,
-            fee: float
-    ) -> dict:
-        async with RabbitBroker(settings.RABBITMQ_URL) as broker:
-            db_transaction: dict = await broker.publish(
-                {
-                    'transaction_hash': transaction_hash,
-                    'from_address': from_address,
-                    'to_address': to_address,
-                    'value': value,
-                    'age': age,
-                    'status': status,
-                    'fee': fee,
-                },
-                queue='create_transaction',
-                exchange='wallet_exchange',
-                callback=True
-            )
-            return db_transaction
-
-    @staticmethod
     async def change_balance(
             address: str,
             value: float,
@@ -177,5 +149,18 @@ class ParserService:
                     'operation_type': operation_type,
                 },
                 queue='change_balance',
+                exchange='wallet_exchange',
+                callback=True)
+
+    @staticmethod
+    async def create_transaction_bulk(
+            transactions: list[dict],
+    ) -> None:
+        async with RabbitBroker(settings.RABBITMQ_URL) as broker:
+            await broker.publish(
+                {
+                    'transactions': transactions
+                },
+                queue='create_transaction_bulk',
                 exchange='wallet_exchange',
                 callback=True)

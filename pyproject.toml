@@ -4,13 +4,13 @@ version = "0.1.0"
 description = ""
 authors = ["Viktor1385 <viktor13851998@gmail.com>"]
 readme = "README.md"
-packages = [{include = "crypto_wallet"}]
+packages = [{ include = "crypto_wallet" }]
 
 [tool.poetry.dependencies]
 python = "^3.10"
 fastapi = "^0.100.1"
 uvicorn = "^0.23.2"
-dependency-injector = {extras = ["yaml"], version = "^4.41.0"}
+dependency-injector = { extras = ["yaml"], version = "^4.41.0" }
 sqlalchemy = "^2.0.19"
 python-environ = "^0.4.54"
 passlib = "^1.7.4"
@@ -20,8 +20,8 @@ pyjwt = "^2.8.0"
 fastapi-mail = "^1.4.1"
 jinja2 = "^3.1.2"
 rabbitmq = "^0.2.0"
-propan = {extras = ["async-rabbit"], version = "^0.1.5.17"}
-redis = {extras = ["async"], version = "^4.6.0"}
+propan = { extras = ["async-rabbit"], version = "^0.1.5.17" }
+redis = { extras = ["async"], version = "^4.6.0" }
 asgiref = "^3.7.2"
 web3 = "^6.8.0"
 celery = "^5.3.1"
@@ -35,6 +35,9 @@ python-multipart = "^0.0.6"
 aioredis = "^2.0.1"
 sanic = "^23.6.0"
 flower = "^2.0.1"
+pytest = "^7.4.1"
+pytest-asyncio = "^0.21.1"
+asgi-lifespan = "^2.1.0"
 
 
 [tool.poetry.group.dev.dependencies]
@@ -43,3 +46,4 @@ setuptools = "^68.0.0"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+

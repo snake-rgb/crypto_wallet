@@ -1,10 +1,11 @@
 import datetime
 
-from sqlalchemy import Column, Integer, Boolean, Float, ForeignKey, CHAR, String, Numeric, DECIMAL, DateTime
+from sqlalchemy import Column, Integer, Boolean, Float, ForeignKey, CHAR, String, Numeric, DECIMAL, DateTime, Enum
 from sqlalchemy.orm import relationship
 from sqlalchemy_utils import URLType
 
 from src.core.database import Base
+from src.wallet.enums import TransactionStatus
 
 
 class Wallet(Base):
@@ -53,4 +54,5 @@ class Transaction(Base):
     value = Column(DECIMAL())
     age = Column(DateTime(), default=datetime.datetime.utcnow())
     fee = Column(DECIMAL())
-    status = Column(String, default='PENDING')
+    status = Column(Enum(TransactionStatus),
+                    default=TransactionStatus.PENDING)

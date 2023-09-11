@@ -1,3 +1,4 @@
+import decimal
 from typing import Iterator
 
 from pydantic import BaseModel
@@ -10,4 +11,8 @@ class AssetSchema(BaseModel):
     symbol: str
 
 
-
+class WalletSchema(BaseModel):
+    id: int
+    address: str
+    balance: decimal.Decimal
+    asset_image: str

@@ -1,11 +1,11 @@
 import datetime
-from typing import Iterator
 from fastapi import HTTPException
 from eth_account import Account
 import secrets
 from propan import RabbitBroker
 from web3.datastructures import AttributeDict
 from config import settings
+from src.wallet.enums import TransactionStatus
 from src.wallet.models import Wallet, Transaction
 from src.wallet.repositories.repository import WalletRepository
 
@@ -79,11 +79,13 @@ class WalletService:
                 exchange='web3_exchange',
                 callback=True)
             signed_transaction: dict = transaction
+
             transaction_hash = await broker.publish(
                 signed_transaction,
                 queue='send_raw_transaction',
                 exchange='web3_exchange',
                 callback=True)
+
             db_transaction = await self.wallet_repository.create_transaction(
                 transaction_hash=transaction_hash,
                 from_address=from_address,
@@ -118,23 +120,27 @@ class WalletService:
             return transaction
 
     async def import_wallet(self, private_key: str, access_token: str) -> Wallet:
-        account = Account.from_key(private_key)
-        address = account.address
-        balance = await self.get_balance(address)
-        async with RabbitBroker(settings.RABBITMQ_URL) as broker:
-            user_id: int = await broker.publish({
-                'access_token': access_token,
-            },
-                queue='get_user_id',
-                exchange='user_exchange',
-                callback=True
-            )
-            if balance and user_id:
-                wallet = await self.wallet_repository.import_wallet(private_key, address, user_id=user_id)
-                await self.wallet_repository.set_balance(balance, wallet.address)
-                return wallet
-            else:
-                raise HTTPException(status_code=400, detail='Wallet exception')
+        try:
+            account = Account.from_key(private_key)
+            address = account.address
+            balance = await self.get_balance(address)
+            async with RabbitBroker(settings.RABBITMQ_URL) as broker:
+                user_id: int = await broker.publish({
+                    'access_token': access_token,
+                },
+                    queue='get_user_id',
+                    exchange='user_exchange',
+                    callback=True
+                )
+                if balance and user_id:
+                    wallet = await self.wallet_repository.import_wallet(private_key, address, user_id=user_id)
+                    await self.wallet_repository.set_balance(balance, wallet.address)
+                    return wallet
+                else:
+                    raise HTTPException(status_code=400, detail='Wallet exception')
+        except ValueError:
+            raise HTTPException(status_code=400,
+                                detail='The private key must be exactly 32 bytes long, instead of 3 bytes.')
 
     async def get_wallets_address_in_block(self, wallet_address: list) -> list[str]:
         return set(await self.wallet_repository.get_wallets_address_in_block(wallet_address))
@@ -185,7 +191,7 @@ class WalletService:
             to_address: str,
             value: float,
             age: datetime.datetime,
-            status: str,
+            status: TransactionStatus,
             fee: float,
     ) -> Transaction:
         transaction: Transaction = await self.wallet_repository.create_transaction(
@@ -204,9 +210,12 @@ class WalletService:
             address: str,
             value: float,
             operation_type: str,
-    ):
+    ) -> Wallet:
         return await self.wallet_repository.change_balance(
             address=address,
             value=value,
             operation_type=operation_type,
         )
+
+    async def get_user_wallets(self, user_id) -> list[Wallet]:
+        return await self.wallet_repository.get_user_wallets(user_id)

@@ -12,3 +12,6 @@ class ChatService:
 
     async def get_messages(self, limit: int) -> list[Message]:
         return await self.chat_repository.get_messages(limit)
+
+    async def get_user_messages_count(self, user_id: int) -> int:
+        return await self.chat_repository.get_user_messages_count(user_id)

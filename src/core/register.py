@@ -3,6 +3,7 @@ from dependency_injector import providers, containers
 from config import settings
 from src.chat.containers import ChatContainer
 from src.core.containers import CoreContainer
+from src.delivery.containers import DeliveryContainer
 from src.ibay.containers import IbayContainer
 from src.parser.containers import ParserContainer
 from src.users.containers import UserContainer
@@ -18,7 +19,6 @@ class RegisterContainer(containers.DeclarativeContainer):
             'config',
             'config_fastapi',
             'config_socketio',
-            # 'config_celery',
             'src.core',
             'src.api',
             'src.auth',
@@ -31,6 +31,7 @@ class RegisterContainer(containers.DeclarativeContainer):
             'src.chat',
             'src.web3',
             'src.moralis',
+            'src.delivery',
         ],
     )
 
@@ -71,3 +72,5 @@ class RegisterContainer(containers.DeclarativeContainer):
         ChatContainer,
         session=core_container.session,
     )
+
+    delivery_container = providers.Container(DeliveryContainer)

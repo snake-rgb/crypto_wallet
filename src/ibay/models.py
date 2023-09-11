@@ -2,7 +2,6 @@ import datetime
 from sqlalchemy import Column, Integer, String, DECIMAL, ForeignKey, DateTime, Enum
 from sqlalchemy.orm import relationship
 from sqlalchemy_utils import URLType
-
 from src.core.database import Base
 from src.ibay.enums import OrderStatus
 

@@ -34,3 +34,13 @@ async def get_messages(
 ):
     messages: list[Message] = await chat_service.get_messages(limit)
     return {'messages': messages}
+
+
+@chat_router.get('/get-user-messages-count/')
+@inject
+async def get_user_messages_count(
+        user_id: int,
+        chat_service: ChatService = Depends(Provide[RegisterContainer.chat_container.chat_service])
+):
+    messages_count: int = await chat_service.get_user_messages_count(user_id)
+    return {'messages_count': messages_count}
