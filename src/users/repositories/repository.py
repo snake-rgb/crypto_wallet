@@ -3,7 +3,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.auth.dependencies.jwt_auth import decode_token
 from src.users.models import User
-from src.users.schemas import UserForm, ProfileSchema
+from src.users.schemas import ProfileSchema
 
 
 class UserRepository:
@@ -32,14 +32,6 @@ class UserRepository:
 
             await session.delete(user)
             await session.commit()
-
-    async def register(self, user_form: UserForm, hashed_password) -> User:
-        async with self.session_factory() as session:
-            user = User(**user_form.model_dump(exclude=['password', 'confirm_password']),
-                        password=hashed_password)
-            session.add(user)
-            await session.commit()
-            return user
 
     async def profile_edit(self, access_token: str, profile_schema: ProfileSchema, hashed_password: str) -> User:
         async with self.session_factory() as session:

@@ -127,7 +127,7 @@
 
         <!-- Layout container -->
         <div class="layout-page">
-            <nav class="layout-navbar container-xxl navbar navbar-expand-xl navbar-detached align-items-center bg-navbar-theme"
+            <nav class="layout-navbar navbar-nav-right d-flex align-items-center bg-navbar-theme navbar-detached"
                  id="layout-navbar">
                 <!--Menu toggle button-->
                 <div class="layout-menu-toggle navbar-nav align-items-xl-center me-3 me-xl-0 d-xl-none">
@@ -146,7 +146,7 @@
                         <!-- User -->
                         <li class="nav-item">
                             <div class="avatar avatar-online">
-                                <img src="/static/assets/img/avatars/6.png" alt="" class="h-auto profile-image">
+                                <img src="/static/assets/img/avatars/6.png" alt="" class="h-100 profile-image">
                             </div>
                         </li>
                         <!--/ User -->
@@ -183,13 +183,14 @@
                                     </div>
                                     <div class="flex-grow-1 mt-0 mt-sm-0">
                                         <div class="d-flex align-items-md-start align-items-sm-start align-items-center justify-content-md-start justify-content-start mx-4 flex-md-row flex-column gap-4">
-                                            <a href="javascript:void(0)"
-                                               class="btn btn-primary waves-effect waves-light">
-                                                <i class="ti ti-user-check me-1"></i>Update
+                                            <a href='#'
+                                               class="btn btn-primary waves-effect waves-light upload-image-button">
+                                                <i class="ti ti-user-check me-1"></i>Изменить
                                             </a>
-                                            <a href="javascript:void(0)"
-                                               class="btn btn-primary waves-effect waves-light">
-                                                <i class="ti ti-user-check me-1"></i>Remove
+                                            <input type="file" style="display: none;" class="upload-image-input">
+                                            <a href="#"
+                                               class="btn btn-primary waves-effect waves-light delete-image-button">
+                                                <i class="ti ti-user-check me-1"></i>Удалить
                                             </a>
                                         </div>
                                     </div>
@@ -335,6 +336,17 @@
                         <div class="toast-message">Ошибка что-то пошло не так!</div>
                     </div>
                 </div>
+                <div class="bs-toast toast toast-placement-ex m-2 fade top-0 start-50 translate-middle-x hide"
+                     role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="3000"
+                     id="update-profile-toast">
+                    <div class="toast-header">
+                        <i class="ti ti-bell ti-xs me-2 text-success"></i>
+                        <div class="me-auto fw-semibold">Успешно</div>
+                        <small class="text-muted toast-time">время</small>
+                        <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                    <div class="toast-body">Профиль успешно обновлен</div>
+                </div>
                 <div class="content-backdrop fade"></div>
             </div>
             <!-- Content wrapper -->
@@ -374,7 +386,14 @@
 
 <!-- Page JS -->
 <script src="/static/assets/js/pages-profile.js"></script>
+
+<!--JQUERY VALIDATION-->
+<script src="/static/dist/plugins/jquery_validation/js/jquery.validate.min.js"></script>
+<script src="/static/dist/plugins/jquery_validation/js/additional-methods.min.js"></script>
+
+<!--JQUERY VALIDATION LOCALIZATION-->
+<script src="/static/dist/plugins/jquery_validation/localization/messages_ru.min.js"></script>
 <!--CUSTOM SCRIPTS-->
-<script src="/static/scripts/js/profile.js"></script>
+<script src="/static/scripts/js/profile.js" type="module"></script>
 </body>
 </html>

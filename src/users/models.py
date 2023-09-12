@@ -11,7 +11,9 @@ class User(Base):
     username = Column(String)
     email = Column(EmailType, unique=True)
     password = Column(String)
-    profile_image = Column(URLType)
+    profile_image = Column(
+        URLType,
+        default='https://cryptowalletbucket.s3.eu-north-1.amazonaws.com/images/standart_image.jpg')
     is_active = Column(Boolean, default=True)
     has_chat_access = Column(Boolean, default=False)
 

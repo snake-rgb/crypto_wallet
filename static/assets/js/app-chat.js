@@ -67,17 +67,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     scrollToBottom();
 
-    // User About Maxlength Init
-    if (chatSidebarLeftUserAbout.length) {
-      chatSidebarLeftUserAbout.maxlength({
-        alwaysShow: true,
-        warningClass: 'label label-success bg-success text-white',
-        limitReachedClass: 'label label-danger',
-        separator: '/',
-        validate: true,
-        threshold: 120
-      });
-    }
+
 
     // Update user status
     chatUserStatus.forEach(el => {
@@ -169,13 +159,7 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     });
 
-    // on click of chatHistoryHeaderMenu, Remove data-overlay attribute from chatSidebarLeftClose to resolve overlay overlapping issue for two sidebar
-    let chatHistoryHeaderMenu = document.querySelector(".chat-history-header [data-target='#app-chat-contacts']"),
-      chatSidebarLeftClose = document.querySelector('.app-chat-sidebar-left .close-sidebar');
-    chatHistoryHeaderMenu.addEventListener('click', e => {
-      chatSidebarLeftClose.removeAttribute('data-overlay');
-    });
-    // }
+
 
     // Speech To Text
     if (speechToText.length) {

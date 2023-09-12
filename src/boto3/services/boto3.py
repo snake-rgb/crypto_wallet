@@ -66,24 +66,3 @@ class Boto3Service:
             return public_url
         except Exception as e:
             print("Ошибка:", e)
-
-    # async def upload_product_image(
-    #         self,
-    #         base64_image: str,
-    #         name: str,
-    #         price: float,
-    #         wallet_address: str
-    # ) -> None:
-    #
-    #     image_url: str = await self.upload_image(base64_image)
-    #     print(image_url)
-    #     async with RabbitBroker(settings.RABBITMQ_URL) as broker:
-    #         await broker.publish(
-    #             ProductSchema(
-    #                 image=image_url,
-    #                 name=name,
-    #                 price=price,
-    #                 wallet_address=wallet_address
-    #             ).model_dump(),
-    #             queue='upload_product_image',
-    #             exchange='ibay_exchange')

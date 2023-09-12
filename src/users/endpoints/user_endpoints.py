@@ -17,10 +17,10 @@ register_router = APIRouter(tags=['user'])
 @inject
 async def get_users(
         user_service: UserService = Depends(Provide[RegisterContainer.user_container.user_service]),
-        bearer: HTTPAuthorizationCredentials = Depends(user_auth)
+        # bearer: HTTPAuthorizationCredentials = Depends(user_auth)
 ) -> dict:
     users = await user_service.get_users()
-    return {'users': users}
+    return {'users': users.__repr__()}
 
 
 @register_router.get('/get_user_by_id/{user_id}')

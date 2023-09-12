@@ -34,13 +34,11 @@ async def app():
     async def lifespan(app):
         print("Starting up")
         container = RegisterContainer()
-        app.mount("/socket.io", sanic_app)
+        # app.mount("/socket.io", sanic_app)
         container.core_container.db(db_url=DATABASE_TEST_URL)
         app.container = container
         app.broker = broker
-
         await broker.start()
-
         yield
         sanic_app.shutdown_tasks()
         sanic_app.stop()

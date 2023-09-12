@@ -1,5 +1,11 @@
+import {verify_token} from "./register.js";
+
+let profile_image
+
 $(document).ready(function () {
     get_user()
+    verify_token()
+
 })
 $('.import-confirm-button').click(function () {
     let private_key = $('.import-private-key-input').val()
@@ -93,6 +99,7 @@ function get_user() {
         success: function (response) {
             $('.user-name-field').text(response['username'])
             $('.profile-image').attr('src', response['profile_image'])
+            profile_image = response['profile_image']
             $('#username').val(response['username'])
             $('#email').val(response['email'])
             user_messages_count(response['id'])
@@ -148,13 +155,17 @@ function update_user() {
     let username = $('#username').val()
     let password = $('#new-password').val()
     let confirm_password = $('#confirm-password').val()
+    let profile_image = $('.upload-image-input').attr('src')
+    if (profile_image === undefined)
+        profile_image = ''
 
     let data = JSON.stringify({
         'username': username,
         'password': password,
         'confirm_password': confirm_password,
-        'profile_image': '',
+        'profile_image': profile_image
     })
+    console.log(data)
     $.ajax({
         url: base_url + api_endpoint,
         method: 'put',
@@ -165,11 +176,39 @@ function update_user() {
         data: data,
         success: function (response) {
             console.log(response)
+            $('.user-name-field').text(response['username'])
+            $('.profile-image').attr('src', response['profile_image'])
+            $('#uploadedAvatar').attr('src', response['profile_image'])
+            profile_image = response['profile_image']
+            let toast = $('#update-profile-toast')
+            let toastAnimation = new bootstrap.Toast(toast);
+            toastAnimation.show();
         },
         error: function (response) {
             console.log(response)
         }
     })
+
 }
 
 $('.update-profile-button').click(update_user)
+$('.upload-image-button').click(function () {
+    $('.upload-image-input').click()
+})
+$('.upload-image-input').change(function () {
+    let image = $('.upload-image-input').prop('files')[0]
+    if (image) {
+        let reader = new FileReader();
+        reader.onload = function (e) {
+            $('.upload-image-input').attr('src', e.target.result);
+            $('.profile-image').attr('src', e.target.result)
+        };
+        reader.readAsDataURL(image);
+
+    }
+})
+// TOOO: Сделать удаление изображения
+$('.delete-image-button').click(function () {
+    $('.upload-image-input').attr('src', '');
+    $('.profile-image').attr('src', profile_image)
+})

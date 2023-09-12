@@ -26,6 +26,13 @@ async def main_start(sanic: Sanic):
     logger.info('sanic startup')
     last_block_number = await redis.get('last_block_number')
     logger.info(last_block_number)
+    # sio.register_namespace(ConnectNS('/chat'))
+
+
+@sanic_app.after_server_stop
+def server_stop(app, loop):
+    sanic_app.purge_tasks()
+    asyncio.get_event_loop().stop()
 
 
 async def get_block_latest(
@@ -48,8 +55,9 @@ async def connect(
         sid: str,
         environ,
 ):
+    sio.enter_room(sid, room='chat_room', namespace='/chat')
     print(f"Client {sid} connected chat")
-    # await fastapi_manager.emit('chat_message', {'data': 'Server generated event'}, room=sid)
+    await fastapi_manager.emit('new_user_connected', {'data': f'new_user_connected - {sid}'}, namespace='/chat')
 
 
 @sio.on("disconnect", namespace='/chat')
@@ -63,11 +71,25 @@ async def delivery():
         await asyncio.sleep(5)
 
 
-sanic_app.add_task(get_block_latest())
-sanic_app.add_task(delivery())
+# sanic_app.add_task(get_block_latest())
+# sanic_app.add_task(delivery())
 
 
-@sio.on("chat", namespace='/chat')
-async def chat(sid, data):
-    message = data.get('message')
-    await fastapi_manager.emit('chat_message', data={'message': f'{message}'}, namespace='/chat')
+# @sio.on("chat", namespace='/chat')
+# async def chat(sid, data):
+#     message = data.get('message')
+#     await fastapi_manager.emit('chat_message', data={'message': f'{message}'}, namespace='/chat')
+
+@sio.on("connect")
+async def connect(
+        sid: str,
+        environ,
+):
+    # sio.enter_room(sid, room='chat_room')
+    print(f"Client {sid} connected chat")
+    await fastapi_manager.emit('new_user_connected', {'data': f'new_user_connected - {sid}'})
+
+
+@sio.on("join_room")
+async def join_room(sid):
+    print(f"Client {sid} disconnected")

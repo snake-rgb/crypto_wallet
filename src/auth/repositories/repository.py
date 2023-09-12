@@ -1,16 +1,10 @@
-import datetime
-from typing import Callable, Iterator
-
+from typing import Callable
 import passlib.hash
-from fastapi import Response, Request
-from jwt import ExpiredSignatureError
+from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import Session
 from src.users.models import User
-from src.auth.schemas import LoginScheme
-import jwt
-import config.settings as settings
+from src.auth.schemas import LoginScheme, RegisterSchema
 
 
 class AuthRepository:
@@ -23,12 +17,20 @@ class AuthRepository:
             result = await session.execute(select(User).where(User.email == login_scheme.email))
             user = result.scalar_one_or_none()
             if user is None:
-                raise UserNotFoundError(login_scheme.email)
+                raise HTTPException(status_code=404, detail=f'Cant find user with email {login_scheme.email}')
             else:
                 if passlib.hash.pbkdf2_sha256.verify(login_scheme.password, user.password):
                     return user
                 else:
                     return None
+
+    async def register(self, register_schema: RegisterSchema, hashed_password) -> User:
+        async with self.session_factory() as session:
+            user = User(**register_schema.model_dump(exclude=['password', 'confirm_password']),
+                        password=hashed_password)
+            session.add(user)
+            await session.commit()
+            return user
 
 
 class NotFoundError(Exception):

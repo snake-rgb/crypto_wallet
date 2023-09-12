@@ -34,7 +34,7 @@
     <link rel="stylesheet" href="{{ url_for('static',path='/assets/vendor/css/rtl/theme-default.css') }}"
           class="template-customizer-theme-css"/>
     <link rel="stylesheet" href="{{ url_for('static',path='/assets/css/demo.css') }}"/>
-
+    <link rel="stylesheet" href="/static/assets/vendor/css/pages/page-profile.css"/>
     <!-- Vendors CSS -->
     <link rel="stylesheet"
           href="{{ url_for('static',path='/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css') }}"/>
@@ -118,7 +118,7 @@
                         </div>
                         <div class="mb-3 form-password-toggle">
                             <div class="d-flex justify-content-between">
-                                <label class="form-label" for="password">Password</label>
+                                <label class="form-label" for="password">Пароль</label>
                             </div>
                             <div class="input-group input-group-merge password-input-group">
                                 <input
@@ -146,7 +146,7 @@
 
                     <p class="text-center">
                         <span>Нажмите </span>
-                        <a href="">
+                        <a href="http://127.0.0.1:8000/register/">
                             <span class="text-decoration-underline">РЕГИСТРАЦИЯ</span>
                         </a>
                         <span>если у вас нет аккаунта.</span>
@@ -156,6 +156,7 @@
             <!-- /Register -->
         </div>
     </div>
+
 </div>
 
 <!-- / Content -->
@@ -172,17 +173,14 @@
 <script src="/static/assets/vendor/libs/hammer/hammer.js"></script>
 <script src="/static/assets/vendor/libs/i18n/i18n.js"></script>
 <script src="/static/assets/vendor/libs/typeahead-js/typeahead.js"></script>
-
+<script src="/static/assets/vendor/libs/toastr/toastr.js"></script>
 <script src="/static/assets/vendor/js/menu.js"></script>
 <!-- endbuild -->
 
-<!-- Vendors JS -->
-{#<script src="/static/assets/vendor/libs/formvalidation/dist/js/FormValidation.min.js"></script>#}
-{#<script src="/static/assets/vendor/libs/formvalidation/dist/js/plugins/Bootstrap5.min.js"></script>#}
-{#<script src="/static/assets/vendor/libs/formvalidation/dist/js/plugins/AutoFocus.min.js"></script>#}
 
 <!-- Main JS -->
 <script src="/static/assets/js/main.js"></script>
+<script src="/static/assets/js/ui-toasts.js"></script>
 
 <!-- Page JS -->
 <script src="/static/assets/js/pages-auth.js"></script>
@@ -194,7 +192,7 @@
 <!--JQUERY VALIDATION LOCALIZATION-->
 <script src="/static/dist/plugins/jquery_validation/localization/messages_ru.min.js"></script>
 <!--CUSTOM SCRIPTS-->
-<script src="/static/scripts/js/login.js"></script>
+<script src="/static/scripts/js/login.js" type="module"></script>
 
 
 </body>

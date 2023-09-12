@@ -1,9 +1,9 @@
-from typing import Union, Optional
+from typing import Union
 from datetime import datetime, timedelta
 import jwt
 from dependency_injector.wiring import inject
 from fastapi import Request, HTTPException
-from jwt import ExpiredSignatureError
+from jwt import ExpiredSignatureError, DecodeError
 from starlette.status import HTTP_403_FORBIDDEN
 from config import settings
 from config.settings import SECRET_KEY
@@ -29,10 +29,10 @@ class UserAuth(JwtHTTPBearer):
 
 
 def token_verify(access_token: str):
-    if access_token != 'bearer':
+    try:
         header_data = jwt.get_unverified_header(access_token)
         try:
-            payload = jwt.decode(
+            jwt.decode(
                 access_token,
                 key=SECRET_KEY,
                 algorithms=[header_data['alg']]
@@ -43,8 +43,10 @@ def token_verify(access_token: str):
             raise HTTPException(
                 status_code=HTTP_403_FORBIDDEN, detail="Token expired"
             )
-    else:
-        return access_token
+    except DecodeError:
+        raise HTTPException(
+            status_code=HTTP_403_FORBIDDEN, detail="Token invalid"
+        )
 
 
 def create_access_token(user_id: int, remember_me: bool) -> str:

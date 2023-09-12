@@ -1,6 +1,5 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
 from .config_fastapi import broker
 from .routers import init_routers
 from celery import Celery
@@ -47,7 +46,7 @@ async def startup():
     app.broker = broker
     app.broker.include_router(socket_rabbit_router)
     await broker.start()
-    app.mount("/socket.io", sanic_app)
+    app.mount("/socket.io", sanic_app, name='socket.io')
     app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
