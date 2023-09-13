@@ -59,9 +59,24 @@ class UserRepository:
 
     async def chat_activate(self, user_id: int) -> User:
         async with self.session_factory() as session:
-            result = await session.execute(select(User).where(User.id == user_id))
-            user = result.scalar_one()
+            query = await session.execute(select(User).where(User.id == user_id))
+            user = query.scalar_one()
             user.has_chat_access = True
+            await session.commit()
+            await session.refresh(user)
+            return user
+
+    async def get_online_users(self) -> list[User]:
+        async with self.session_factory() as session:
+            query = await session.execute(select(User).where(User.is_online))
+            users = query.scalars().all()
+            return users
+
+    async def set_user_is_online(self, user_id: int, status: bool) -> User:
+        async with self.session_factory() as session:
+            query = await session.execute(select(User).where(User.id == user_id))
+            user = query.scalar_one()
+            user.is_online = status
             await session.commit()
             await session.refresh(user)
             return user

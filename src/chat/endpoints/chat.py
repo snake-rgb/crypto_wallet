@@ -2,7 +2,10 @@ from typing import Optional
 
 from dependency_injector.wiring import inject, Provide
 from fastapi import APIRouter, Depends
+from fastapi.security import HTTPAuthorizationCredentials
 
+from src.auth.dependencies.jwt_auth import decode_token
+from src.auth.endpoints.auth import user_auth
 from src.boto3.services.boto3 import Boto3Service
 from src.chat.models import Message
 from src.chat.schemas import MessageSchema
@@ -17,13 +20,15 @@ chat_router = APIRouter(tags=['chat'])
 async def create_message(
         message_schema: MessageSchema,
         chat_service: ChatService = Depends(Provide[RegisterContainer.chat_container.chat_service]),
-        boto3_service: Boto3Service = Depends(Provide[RegisterContainer.boto3_container.boto3_service])
+        boto3_service: Boto3Service = Depends(Provide[RegisterContainer.boto3_container.boto3_service]),
+        bearer: HTTPAuthorizationCredentials = Depends(user_auth),
 ):
     if message_schema.image != '':
         image = await boto3_service.upload_image(message_schema.image)
         message_schema.image = image
-    response: Message = await chat_service.create_message(message_schema)
-    return {'response': response}
+    payload = decode_token(bearer.credentials)
+    message: Message = await chat_service.create_message(message_schema, user_id=payload.get('user_id'))
+    return {'message': message}
 
 
 @chat_router.get('/get-messages/')

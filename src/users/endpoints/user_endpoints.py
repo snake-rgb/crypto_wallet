@@ -89,3 +89,23 @@ async def profile_edit(
         'id': user.id,
 
     }
+
+
+@register_router.get(
+    '/users/online',
+)
+@inject
+async def get_online_users(
+        user_service: UserService = Depends(Provide[RegisterContainer.user_container.user_service]),
+        bearer: HTTPAuthorizationCredentials = Depends(user_auth),
+) -> dict:
+    users = await user_service.get_online_users()
+
+    return {'users': [
+        {
+            'id': user.id,
+            'username': user.username,
+            'profile_image': user.profile_image,
+            'is_online': user.is_online
+        }
+        for user in users]}

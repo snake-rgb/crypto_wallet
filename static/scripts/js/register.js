@@ -113,12 +113,13 @@ export function verify_token() {
                 'Content-Type': 'application/json',
             },
             success: function (response) {
-                if (response === true && window.location.href !== 'http://127.0.0.1:8000/profile/')
-                    window.location = base_url + '/profile/'
+                if (response === true)
+                    if (window.location.host === 'http://127.0.0.1:8000/login/' || window.location.href === 'http://127.0.0.1:8000/register/')
+                        window.location = base_url + '/profile/'
             },
             statusCode: {
                 403: function () {
-                    if (window.location.href === 'http://127.0.0.1:8000/profile/')
+                    if (window.location.href === 'http://127.0.0.1:8000/profile/' || window.location.href === 'http://127.0.0.1:8000/chat/')
                         window.location = base_url + '/login/'
                 }
             },

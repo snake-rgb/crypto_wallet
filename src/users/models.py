@@ -15,6 +15,7 @@ class User(Base):
         URLType,
         default='https://cryptowalletbucket.s3.eu-north-1.amazonaws.com/images/standart_image.jpg')
     is_active = Column(Boolean, default=True)
+    is_online = Column(Boolean, default=False)
     has_chat_access = Column(Boolean, default=False)
 
     def __repr__(self):

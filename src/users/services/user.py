@@ -28,7 +28,6 @@ class UserService:
     async def profile(self, access_token: str) -> User:
         payload = decode_token(access_token)
         user = await self.user_repository.get_by_id(payload.get('user_id'))
-
         return user
 
     async def profile_edit(self, access_token: str, profile_schema: ProfileSchema) -> User:
@@ -40,3 +39,9 @@ class UserService:
 
     async def chat_activate(self, user_id: int) -> User:
         return await self.user_repository.chat_activate(user_id)
+
+    async def get_online_users(self) -> list[User]:
+        return await self.user_repository.get_online_users()
+
+    async def set_user_is_online(self, user_id: int, status: bool) -> User:
+        return await self.user_repository.set_user_is_online(user_id, status)

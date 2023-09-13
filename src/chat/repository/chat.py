@@ -1,23 +1,27 @@
 from typing import Callable
 
-from sqlalchemy import select
+from sqlalchemy import select, asc
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload
 from sqlalchemy.sql.functions import count
 
 from src.chat.models import Message
 from src.chat.schemas import MessageSchema
 from sqlalchemy import desc
 
+from src.users.models import User
+
 
 class ChatRepository:
     def __init__(self, session_factory: Callable[..., AsyncSession]):
         self.session_factory = session_factory
 
-    async def create_message(self, message_schema: MessageSchema) -> Message:
+    async def create_message(self, message_schema: MessageSchema, user_id: int) -> Message:
         async with self.session_factory() as session:
             message = Message(
                 text=message_schema.text,
-                image=message_schema.image
+                image=message_schema.image,
+                user_id=user_id
             )
             session.add(message)
             await session.commit()
@@ -26,7 +30,8 @@ class ChatRepository:
 
     async def get_messages(self, limit: int) -> list[Message]:
         async with self.session_factory() as session:
-            query = await session.execute(select(Message).order_by(desc(Message.id)))
+            query = await session.execute(
+                select(Message).options(joinedload(Message.user)).order_by(asc(Message.id)))
             messages = query.scalars().fetchmany(limit)
         return messages
 
