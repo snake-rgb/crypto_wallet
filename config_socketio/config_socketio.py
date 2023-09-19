@@ -5,10 +5,6 @@ from propan import RabbitRouter, RabbitBroker
 from sanic import Sanic
 from socketio import AsyncAioPikaManager, AsyncServer
 from config import settings
-from config_fastapi.socketio_manager import fastapi_manager
-from src.auth.dependencies.jwt_auth import decode_token
-from src.chat.schemas import MessageSchema
-from src.chat.service.chat import ChatService
 from src.users.services.user import UserService
 from src.web3.web3_api import Web3API
 from src.core.register import RegisterContainer
@@ -40,7 +36,7 @@ def server_stop(app, loop):
 
 
 async def get_block_latest(
-        web3_api: Web3API = RegisterContainer.api_container.web3_api(),
+        web3_api: Web3API = RegisterContainer.web3_container.web3_api(),
 ):
     while True:
         latest_block_number: str = str(await web3_api.get_block_number_latest())
@@ -60,8 +56,8 @@ async def delivery():
         await asyncio.sleep(5)
 
 
-# sanic_app.add_task(get_block_latest())
-# sanic_app.add_task(delivery())
+sanic_app.add_task(get_block_latest())
+sanic_app.add_task(delivery())
 
 
 @sio.on("connect")
@@ -88,12 +84,22 @@ async def disconnect(sid):
 # @sio.on('leave_chat')
 # async def leave_chat(sid, data):
 
+@sio.on("event_subscription")
+async def event_subscription(
+        sid: str,
+        data,
+):
+    user_service: UserService = RegisterContainer.user_container.user_service()
+    user = await user_service.profile(data.get('access_token'))
+    await sio.save_session(sid, {'access_token': data.get('access_token'), 'user_id': user.id})
+    sio.enter_room(sid, room=user.id)
+    print(f"Client {sid} connected to event room")
+
 
 @sio.on("join_chat")
 async def join_chat(sid, data):
     user_service: UserService = RegisterContainer.user_container.user_service()
     user = await user_service.profile(data.get('access_token'))
-
     await sio.save_session(sid, {'access_token': data.get('access_token'), 'user_id': user.id})
     await user_service.set_user_is_online(user_id=user.id, status=True)
     await sio.emit('join_chat', {

@@ -1,5 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from propan import RabbitBroker
+from config import settings
+from src.web3.web3_api import Web3API
 from .config_fastapi import broker
 from .routers import init_routers
 from celery import Celery
@@ -55,9 +58,23 @@ async def shutdown():
     await broker.close()
     print('fastapi shutdown')
 
-# @app.get('/last-block/')
-# async def set_last_block(
-# ):
-#     web3_api: Web3API = RegisterContainer.api_container.web3_api()
-#     redis = RegisterContainer.parser_container.redis()
-#     await redis.set('last_block_number', await web3_api.get_block_number_latest())
+
+@app.get('/last-block/')
+async def set_last_block(
+):
+    web3_api: Web3API = RegisterContainer.web3_container.web3_api()
+    redis = RegisterContainer.parser_container.redis()
+    await redis.set('last_block_number', await web3_api.get_block_number_latest())
+
+
+@app.get('/test/')
+async def test(
+):
+    async with RabbitBroker(settings.RABBITMQ_URL) as broker:
+        await broker.publish(
+            {
+                'user_id': 1
+
+            },
+            queue='receive_transaction',
+            exchange='socketio_exchange')

@@ -16,3 +16,9 @@ class WalletSchema(BaseModel):
     address: str
     balance: decimal.Decimal
     asset_image: str
+
+
+class TransactionSchema(BaseModel):
+    from_address: str
+    to_address: str
+    amount: float

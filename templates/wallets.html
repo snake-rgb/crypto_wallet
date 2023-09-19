@@ -14,7 +14,7 @@
             content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0"
     />
 
-    <title>Профиль</title>
+    <title>Кошельки</title>
 
     <meta name="description" content=""/>
 
@@ -47,6 +47,7 @@
     <link rel="stylesheet" href="/static/assets/vendor/libs/datatables-checkboxes-jquery/datatables.checkboxes.css"/>
     <link rel="stylesheet" href="/static/assets/vendor/libs/toastr/toastr.css"/>
     <link rel="stylesheet" href="/static/assets/vendor/libs/animate-css/animate.css"/>
+    <link rel="stylesheet" href="/static/assets/vendor/libs/sweetalert2/sweetalert2.css"/>
     <!-- Page CSS -->
     <link rel="stylesheet" href="/static/assets/vendor/css/pages/page-profile.css"/>
     <!-- Helpers -->
@@ -101,12 +102,12 @@
             </div>
             <div class="menu-inner-shadow"></div>
             <ul class="menu-inner py-1">
-                <li class="menu-item active">
+                <li class="menu-item">
                     <a href="http://127.0.0.1:8000/profile/" class="menu-link">
                         <div>Профиль</div>
                     </a>
                 </li>
-                <li class="menu-item">
+                <li class="menu-item active">
                     <a href="http://127.0.0.1:8000/wallets/" class="menu-link">
                         <div>Кошельки</div>
                     </a>
@@ -167,158 +168,158 @@
             <!-- Content wrapper -->
             <div class="content-wrapper">
                 <!-- Content -->
+                <!--WALLETS BLOCK-->
                 <div class="container-fluid flex-grow-1 container-p-y">
-                    <!--PROFILE-->
-                    <div class="card mb-4 mt-4">
-                        <div class="card-header mb-4">
-                            <h3>Профиль</h3>
-                        </div>
+                    <div class="card">
+                        <div class="card-header"><h3>Кошельки</h3></div>
                         <div class="card-body">
-                            <div class="user-profile-header d-flex flex-column flex-sm-row text-sm-start text-center mb-4">
-                                <div class="flex-shrink-0 mt-n2 mx-sm-0 mx-auto">
-                                    <img src="/static/assets/img/avatars/6.png" alt="user-avatar"
-                                         class="d-block w-px-100 h-px-100 rounded profile-image" id="uploadedAvatar">
-                                </div>
-                                <div class="row"><!-- UPDATE AND REMOVE BUTTONS-->
-                                    <div class="flex-grow-0 mt-0 mt-sm-0">
-                                        <div class="align-items-md-start align-items-sm-start align-items-center justify-content-md-start justify-content-start mx-4 flex-md-row flex-column gap-4">
-                                            <h3 class="user-name-field">John Doe</h3>
-                                        </div>
-                                    </div>
-                                    <div class="flex-grow-1 mt-0 mt-sm-0">
-                                        <div class="d-flex align-items-md-start align-items-sm-start align-items-center justify-content-md-start justify-content-start mx-4 flex-md-row flex-column gap-4">
-                                            <a href='#'
-                                               class="btn btn-primary waves-effect waves-light upload-image-button">
-                                                <i class="ti ti-user-check me-1"></i>Изменить
-                                            </a>
-                                            <input type="file" style="display: none;" class="upload-image-input">
-                                            <a href="#"
-                                               class="btn btn-primary waves-effect waves-light delete-image-button">
-                                                <i class="ti ti-user-check me-1"></i>Удалить
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
-
-
-                            </div>
-                            <!--USER DATA-->
-                            <div class="row">
-                                <!--EMAIL AND USERNAME INPUTS-->
-                                <div class="col-sm-12 d-flex justify-content-between">
-                                    <div class="col-sm-5">
-                                        <div class="input-group">
-                                            <div class="input-group-prepend">
-                                                <label class="input-group-text" for="username">Имя пользователя</label>
-                                            </div>
-                                            <input type="text" id="username" class="form-control">
-                                        </div>
-                                    </div>
-                                    <div class="col-sm-5">
-                                        <div class="input-group">
-                                            <div class="input-group-prepend">
-                                                <label class="input-group-text" for="email">Email</label>
-                                            </div>
-                                            <input type="text" id="email" class="form-control" disabled>
-                                        </div>
-                                    </div>
-                                </div>
-                                <!--PASSWORD AND CONFIRM PASSWORD-->
-                                <div class="col-sm-12 d-flex justify-content-between mt-5">
-                                    <div class="col-sm-5">
-                                        <div class="input-group">
-                                            <div class="input-group-prepend">
-                                                <label class="input-group-text" for="new-password">Новый пароль</label>
-                                            </div>
-                                            <input type="text" id="new-password" class="form-control">
-                                        </div>
-                                    </div>
-                                    <div class="col-sm-5">
-                                        <div class="input-group">
-                                            <div class="input-group-prepend">
-                                                <label class="input-group-text" for="confirm-password">Повторите
-                                                    пароль</label>
-                                            </div>
-                                            <input type="text" id="confirm-password" class="form-control">
-                                        </div>
-                                    </div>
-                                </div>
-
-                            </div>
-                            <div class="row mt-4">
-                                <div class="col-sm-12">
-                                    <button class="btn btn-primary update-profile-button">Сохранить</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <!--STATISTICS-->
-                    <div class="card mb-4 mt-4">
-                        <div class="card-header">
-                            <h3>Статистика</h3>
-                        </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-sm-12">
-                                    <h5 class="messages-count">Сообщений в чате:</h5>
-                                </div>
-                                <div class="col-sm-12">
-                                    <h5 class="wallets-count">
-                                        Кошельков:
-                                    </h5>
-                                </div>
-                            </div>
-                        </div>
-
-                    </div>
-                    <!--WALLETS MANAGEMENT-->
-                    <div class="card mb-4 mt-4">
-                        <div class="card-header">
-                            <h3>Управление кошельками</h3>
-                        </div>
-                        <div class="card-body">
-                            <!--WALLETS DIVS-->
                             <div class="row wallets-list">
-                                <div class="col-sm-6 wallet mb-4" id="wallet-template" style="display: none">
-                                    <div class="input-group">
+                            </div>
+                            <!--WALLET TEMPLATE-->
+                            <div id="wallet-template" style="display: none;" class="col-sm-6">
+                                <div class="col-sm-12 d-flex mb-5 wallet-div">
+                                    <!--WALLET ASSET IMAGE-->
+                                    <div class="col-sm-2">
                                         <img src="/static/assets/img/ethereum/ethereum.png" alt=""
-                                             style="max-height: 50px" class="asset-image">
-                                        <a href="" class="etherscan-link form-control"></a>
+                                             style="max-height: 100px;" class="wallet-asset-image">
+                                    </div>
+                                    <div class="col-sm-10">
+                                        <div class="d-flex flex-column">
+                                            <span style="font-weight:bolder; overflow: hidden;
+
+                                              ">Адрес: <a
+                                                    href="" class="wallet-address"
+                                                    style="font-weight:bolder;"></a> </span>
+                                            <span class="mt-2" style="font-weight:bolder;">Баланс: <span
+                                                    class="balance-amount"
+                                                    style="font-weight:bolder;">195</span> ETH</span>
+                                            <div class="row mt-2">
+                                                <div class="col-sm-4">
+                                                    <button class="btn watch-transactions-button"
+                                                            style="background: #0a6aa1; color: #fff">
+                                                        Посмотреть
+                                                        транзакции
+                                                    </button>
+                                                </div>
+                                                <div class="col-sm-4">
+                                                    <button class="btn btn-success send-transaction">Отправить
+                                                        транзакцию
+                                                    </button>
+                                                </div>
+                                                <div class="col-sm-4">
+                                                    <a href="https://sepoliafaucet.com/" target="_blank"
+                                                       class="btn btn-warning overflow-hidden">Получить бесплатные
+                                                        ETH</a>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                            <!--IMPORT AND CREATE BUTTONS-->
-                            <div class="row">
-                                <div class="col-sm-12">
-                                    <button class="btn btn-primary mx-2 mb-2" data-bs-toggle="modal"
-                                            data-bs-target="#import-wallet-modal">Импортировать ETH кошелёк
-                                    </button>
-                                    <button class="btn btn-primary mx-2 mb-2" id="create-wallet-button">Создать
-                                        ETH кошелёк
-                                    </button>
-                                </div>
-                            </div>
+
                         </div>
                     </div>
                 </div>
                 <!-- / Content -->
                 <!--IMPORT WALLET MODAL-->
-                <div class="modal" tabindex="-1" id="import-wallet-modal">
+                <div class="modal" tabindex="-1" id="send-transaction-modal">
                     <div class="modal-dialog">
                         <div class="modal-content">
                             <div class="modal-header">
-                                <h5 class="modal-title">Импортировать ETH кошелёк</h5>
+                                <h5 class="modal-title">Отправка ETH</h5>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal"
                                         aria-label="Close"></button>
                             </div>
                             <div class="modal-body">
-                                <input type="text" class="form-control import-private-key-input"
-                                       placeholder="Введите приватный ключ">
+                                <div class="input-group">
+                                    <span class="input-group-text">Получатель :</span>
+                                    <input type="text" class="form-control to-address-input" placeholder="Введите адрес"
+                                           aria-label="Address"
+                                           aria-describedby="Address">
+                                </div>
+                                <div class="input-group mt-3">
+                                    <span class="input-group-text">Количество :</span>
+                                    <input type="text" class="form-control eth-amount" placeholder="Введите количество"
+                                           aria-label="Amount"
+                                           aria-describedby="Amount">
+                                </div>
+                                <div class="error-list mt-2 d-flex flex-column">
+                                    <span class="address-error" style="color: #d03131"></span>
+                                    <span class="value-error" style="color: #d03131"></span>
+                                </div>
                             </div>
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отменить
                                 </button>
-                                <button type="button" class="btn btn-primary import-confirm-button">Сохранить</button>
+                                <button type="button" class="btn btn-primary send-transaction-button">Отправить</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!--TRANSACTION HASH MODAL-->
+                <!--IMPORT WALLET MODAL-->
+                <div class="modal" tabindex="-1" id="hash-transaction-modal">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Отправка произведена.</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                        aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <span>Отправка произведена. <a href=""
+                                                               class="transaction-link">Ссылка на транзакцию.</a></span>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!--WATCH TRANSACTIONS MODAL-->
+                <div class="modal modal-xl" tabindex="-1" id="watch-transactions-modal">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Отправка произведена.</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                        aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="card">
+                                    <h5 class="card-header text-center watch-transactions-header">Список транзакций
+                                        ETH</h5>
+                                    <div class="card-datatable text-nowrap">
+                                        <div
+                                                class="dataTables_wrapper dt-bootstrap5 no-footer">
+                                            <div class="table-responsive">
+                                                <table
+                                                        id="watch-transactions-datatable"
+                                                        aria-describedby="watch-transactions-datatable">
+                                                    <thead>
+                                                    <tr>
+                                                        <th>Txn hash</th>
+                                                        <th>From</th>
+                                                        <th>To</th>
+                                                        <th>Value</th>
+                                                        <th>Age</th>
+                                                        <th>Txn Fee</th>
+                                                        <th>Status</th>
+                                                    </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -355,13 +356,14 @@
 
 <!-- Vendors JS -->
 <script src="/static/assets/vendor/libs/datatables-bs5/datatables-bootstrap5.js"></script>
-
+<script src="/static/assets/vendor/libs/moment/moment.js"></script>
+<script src="/static/assets/vendor/libs/flatpickr/flatpickr.js"></script>
 <!-- Main JS -->
 <script src="/static/assets/js/main.js"></script>
-{#<script src="/static/assets/js/ui-toasts.js"></script>#}
+
 
 <!-- Page JS -->
-<script src="/static/assets/js/pages-profile.js"></script>
+
 
 <!--JQUERY VALIDATION-->
 <script src="/static/dist/plugins/jquery_validation/js/jquery.validate.min.js"></script>
@@ -369,9 +371,15 @@
 <script src="
 https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>
 
+<!--SOCKETIO-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.6.0/socket.io.min.js"></script>
+
+<!--SWEET ALERT2-->
+<script src="/static/assets/vendor/libs/sweetalert2/sweetalert2.js"></script>
+{#<script src="/static/assets/js/extended-ui-sweetalert2.js"></script>#}
 <!--JQUERY VALIDATION LOCALIZATION-->
 <script src="/static/dist/plugins/jquery_validation/localization/messages_ru.min.js"></script>
 <!--CUSTOM SCRIPTS-->
-<script src="/static/scripts/js/profile.js" type="module"></script>
+<script src="/static/scripts/js/wallets.js" type="module"></script>
 </body>
 </html>

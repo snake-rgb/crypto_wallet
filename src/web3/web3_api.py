@@ -1,9 +1,13 @@
+from decimal import Decimal
+
 from eth_account.datastructures import SignedTransaction
 from eth_typing import BlockNumber
+from fastapi import HTTPException
 from hexbytes import HexBytes
 from web3 import AsyncWeb3, AsyncHTTPProvider, WebsocketProviderV2
 from web3.eth import AsyncEth
 from web3.types import BlockData, Wei
+from web3.exceptions import InsufficientData, InvalidTransaction
 
 
 class Web3API:
@@ -24,6 +28,9 @@ class Web3API:
     async def convert_ether_to_wei(self, amount: float) -> Wei:
         return self.web3.to_wei(amount, 'ether')
 
+    async def convert_wei_to_ether(self, amount: float) -> Decimal:
+        return self.web3.from_wei(amount, 'ether')
+
     async def sign_transaction(self, transaction: dict) -> dict:
         private_key: str = transaction.pop('private_key')
         signed_transaction: SignedTransaction = self.web3.eth.account.sign_transaction(transaction, private_key)
@@ -36,7 +43,8 @@ class Web3API:
         }
 
     async def send_raw_transaction(self, signed_transaction: dict) -> HexBytes:
-        return await self.web3.eth.send_raw_transaction(signed_transaction.get('rawTransaction'))
+        raw_transaction = await self.web3.eth.send_raw_transaction(signed_transaction.get('rawTransaction'))
+        return raw_transaction
 
     async def get_block_latest(self) -> BlockData:
         return await self.web3_socket.eth.get_block('latest')

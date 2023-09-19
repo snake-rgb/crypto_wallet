@@ -8,9 +8,10 @@ from src.ibay.containers import IbayContainer
 from src.parser.containers import ParserContainer
 from src.users.containers import UserContainer
 from src.wallet.containers import WalletContainer
-from src.api.containers import APIContainer
+from src.moralis.containers import MoralisContainer
 from src.auth.containers import AuthContainer
 from src.boto3.containers import Boto3Container
+from src.web3.containers import Web3Container
 
 
 class RegisterContainer(containers.DeclarativeContainer):
@@ -20,7 +21,7 @@ class RegisterContainer(containers.DeclarativeContainer):
             'config_fastapi',
             'config_socketio',
             'src.core',
-            'src.api',
+
             'src.auth',
             'src.base',
             'src.boto3',
@@ -41,7 +42,8 @@ class RegisterContainer(containers.DeclarativeContainer):
         include=['src.users.tasks', ],
         backend=settings.CELERY_RESULT_BACKEND
     )
-    api_container = providers.Container(APIContainer)
+    moralis_container = providers.Container(MoralisContainer)
+    web3_container = providers.Container(Web3Container)
     core_container = providers.Container(CoreContainer)
     boto3_container = providers.Container(
         Boto3Container,

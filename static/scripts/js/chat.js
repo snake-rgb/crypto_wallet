@@ -1,4 +1,5 @@
 import {verify_token} from "/static/scripts/js/register.js";
+import {logout} from "/static/scripts/js/profile.js";
 
 let socket
 let chatHistoryBody = document.querySelector('.chat-history-body')
@@ -223,4 +224,5 @@ $(document).ready(function () {
     });
     chat_history()
     scrollToBottom()
+    logout()
 })

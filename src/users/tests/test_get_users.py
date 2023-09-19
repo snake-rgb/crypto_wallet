@@ -1,11 +1,8 @@
-import logging
 import pytest
-
-logging.basicConfig(level=logging.INFO)
 
 
 @pytest.mark.asyncio
-async def test_home(client):
+async def test_get_users(client):
     response = await client.get("/api/v1/get_users/")
-    print(response.text)
+    print(response.json())
     assert response.status_code == 200

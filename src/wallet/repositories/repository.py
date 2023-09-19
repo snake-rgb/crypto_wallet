@@ -5,6 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
+from src.users.models import User
 from src.wallet.enums import TransactionStatus
 from src.wallet.models import Wallet, Transaction, Asset
 
@@ -136,10 +137,12 @@ class WalletRepository:
             wallets_address = [wallet.address for wallet in wallets]
             return wallets_address
 
-    async def create_transaction_bulk(self, transactions: list[dict]) -> None:
+    async def create_transaction_bulk(self, transactions: list[dict]) -> list[Transaction]:
         async with self.session_factory() as session:
+            db_transactions = []
             for transaction in transactions:
-                result = await session.execute(select(Transaction).where(Transaction.hash == transaction.get('hash')))
+                result = await session.execute(
+                    select(Transaction).where(Transaction.hash == transaction.get('hash')))
                 transaction_db: Transaction = result.scalar_one_or_none()
 
                 # Convert date from string
@@ -150,8 +153,8 @@ class WalletRepository:
                 if transaction_db:
                     transaction_db.age = age
                     transaction_db.fee = transaction.get('fee')
-                    # transaction_db.status = 'SUCCESS' if transaction.get('status') else 'FAILED'
                     transaction_db.status = transaction.get('status')
+                    db_transactions.append(transaction_db)
                 else:
                     transaction = Transaction(
                         hash=transaction.get('hash'),
@@ -162,8 +165,10 @@ class WalletRepository:
                         fee=transaction.get('fee'),
                         status=transaction.get('status')
                     )
+                    db_transactions.append(transaction)
                     session.add(transaction)
                 await session.commit()
+            return db_transactions
 
     async def get_transaction_by_id(self, transaction_id: int) -> Transaction:
         async with self.session_factory() as session:
@@ -174,6 +179,13 @@ class WalletRepository:
     async def get_user_wallets(self, user_id: int) -> list[Wallet]:
         async with self.session_factory() as session:
             query = await session.execute(
-                select(Wallet).options(joinedload(Wallet.asset)).where(Wallet.user_id == user_id))
+                select(Wallet).options(joinedload(Wallet.asset)).order_by(Wallet.id).where(Wallet.user_id == user_id))
             wallets = query.scalars().all()
             return wallets
+
+    async def get_wallet_by_address(self, wallet_address) -> Wallet:
+        async with self.session_factory() as session:
+            query = await session.execute(
+                select(Wallet).options(joinedload(Wallet.user)).where(Wallet.address == wallet_address))
+            wallet = query.scalar_one_or_none()
+            return wallet

@@ -80,4 +80,4 @@ async def create_transaction_bulk(
         data,
 ):
     wallet_service: WalletService = RegisterContainer.wallet_container.wallet_service()
-    await wallet_service.wallet_repository.create_transaction_bulk(data.get('transactions'))
+    await wallet_service.create_transaction_bulk(data.get('transactions'))

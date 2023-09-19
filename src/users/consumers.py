@@ -1,6 +1,6 @@
 from propan.brokers.rabbit import RabbitExchange
 from config_socketio.config_socketio import socket_rabbit_router
-from src.api.moralis_api import MoralisAPI
+from src.moralis.moralis_api import MoralisAPI
 from src.core.register import RegisterContainer
 from src.users.models import User
 from src.users.services.user import UserService

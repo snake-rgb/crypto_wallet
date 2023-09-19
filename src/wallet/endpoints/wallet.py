@@ -1,13 +1,15 @@
 from dependency_injector.wiring import Provide, inject
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request, Response
 from fastapi.security import HTTPAuthorizationCredentials
+
 from src.auth.dependencies import jwt_auth
+from src.auth.dependencies.jwt_auth import decode_token
 from src.auth.endpoints.auth import user_auth
 from src.core.register import RegisterContainer
 from src.users.models import User
 from src.users.services.user import UserService
 from src.wallet.models import Wallet
-from src.wallet.schemas import WalletSchema
+from src.wallet.schemas import WalletSchema, TransactionSchema
 from src.wallet.service.wallet import WalletService
 
 wallet_router = APIRouter(tags=['wallet'])
@@ -31,23 +33,34 @@ async def create_wallet(
     else:
         user: User = await user_service.get_user_by_id(1)
 
-    response: Wallet = await wallet_service.create_wallet(user.id, asset_id)
-    return {'response': response}
+    wallet: Wallet = await wallet_service.create_wallet(user.id, asset_id)
+    return {'wallet': wallet}
 
 
-@wallet_router.post(
+@wallet_router.get(
     '/wallet/transactions/',
 
 )
 @inject
 async def get_wallet_transactions(
         address: str,
+        request: Request,
         limit: int | None = 10,
+        cursor: str | None = None,
+        page: int | None = None,
         wallet_service: WalletService = Depends(Provide[RegisterContainer.wallet_container.wallet_service]),
         bearer: HTTPAuthorizationCredentials = Depends(user_auth),
 ):
-    response = await wallet_service.get_wallet_transactions(address=address, limit=limit)
-    return {'response': response}
+    result = await wallet_service.get_wallet_transactions(address=address, limit=limit, cursor=cursor, page=page)
+    transactions = result['result']
+    return {
+        'draw': request.query_params.get('draw'),
+        "recordsTotal": 20,
+        "recordsFiltered": len(transactions),
+        'cursor': result['cursor'],
+        'page': result['page'],
+        'data': transactions,
+    }
 
 
 @wallet_router.post(
@@ -84,18 +97,17 @@ async def get_balance(
 )
 @inject
 async def send_transaction(
-        from_address: str,
-        to_address: str,
-        amount: float,
+        transaction_schema: TransactionSchema,
         wallet_service: WalletService = Depends(Provide[RegisterContainer.wallet_container.wallet_service]),
         bearer: HTTPAuthorizationCredentials = Depends(user_auth),
 
 ):
-    response = await wallet_service.send_transaction(from_address=from_address,
-                                                     to_address=to_address,
-                                                     amount=amount,
-                                                     )
-    return {'response': response}
+    transaction = await wallet_service.send_transaction(
+        from_address=transaction_schema.from_address,
+        to_address=transaction_schema.to_address,
+        amount=transaction_schema.amount,
+    )
+    return {'transaction': transaction}
 
 
 @wallet_router.post(
@@ -109,8 +121,8 @@ async def import_wallet(
         bearer: HTTPAuthorizationCredentials = Depends(user_auth),
 
 ):
-    response = await wallet_service.import_wallet(private_key, bearer.credentials)
-    return {'response': response}
+    wallet: Wallet = await wallet_service.import_wallet(private_key, bearer.credentials)
+    return {'wallet': wallet}
 
 
 @wallet_router.get(
@@ -119,16 +131,17 @@ async def import_wallet(
 )
 @inject
 async def get_user_wallets(
-        user_id: int,
         wallet_service: WalletService = Depends(Provide[RegisterContainer.wallet_container.wallet_service]),
         bearer: HTTPAuthorizationCredentials = Depends(user_auth),
 
 ) -> dict:
+    payload = decode_token(bearer.credentials)
+    user_id: int = payload.get('user_id')
     response = await wallet_service.get_user_wallets(user_id)
     wallets = [WalletSchema(
         id=wallet.id,
         address=wallet.address,
-        balance=wallet.balance,
+        balance=float(wallet.balance).__round__(3),
         asset_image=wallet.asset.image,
     ) for wallet in response]
     return {'wallets': wallets}

@@ -42,6 +42,9 @@ $(document).ready(function () {
                 },
                 error: function (response) {
                     console.log(response)
+                    if (response['status'] === 400) {
+                        $('.user-exist-error').text('Пользователь с таким email уже существует')
+                    }
                 }
             })
 
@@ -100,29 +103,3 @@ $('#form-register').validate({
     }
 })
 
-export function verify_token() {
-    // ajax url
-    let base_url = 'http://' + window.location.host
-    let api_endpoint = '/api/v1/token_verify/'
-    $.ajax(
-        {
-            url: base_url + api_endpoint,
-            method: 'get',
-            dataType: "json",
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            success: function (response) {
-                if (response === true)
-                    if (window.location.host === 'http://127.0.0.1:8000/login/' || window.location.href === 'http://127.0.0.1:8000/register/')
-                        window.location = base_url + '/profile/'
-            },
-            statusCode: {
-                403: function () {
-                    if (window.location.href === 'http://127.0.0.1:8000/profile/' || window.location.href === 'http://127.0.0.1:8000/chat/')
-                        window.location = base_url + '/login/'
-                }
-            },
-        }
-    )
-}

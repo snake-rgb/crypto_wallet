@@ -32,7 +32,6 @@ async def test_db_engine():
 async def app():
     @asynccontextmanager
     async def lifespan(app):
-        print("Starting up")
         container = RegisterContainer()
         # app.mount("/socket.io", sanic_app)
         container.core_container.db(db_url=DATABASE_TEST_URL)
@@ -44,7 +43,6 @@ async def app():
         sanic_app.stop()
         await redis.close()
         await broker.close()
-        print("Shutting down")
 
     app = FastAPI(lifespan=lifespan)
 
@@ -57,7 +55,6 @@ async def app():
     )
     routers.init_routers(app)
     async with LifespanManager(app) as manager:
-        print("We're in!")
         yield manager.app
 
 
@@ -66,7 +63,6 @@ async def client(app):
     async with LifespanManager(app) as manager:
         async with httpx.AsyncClient(app=manager.app, base_url="http://testserver") as client:
             try:
-                print("Client is ready")
                 yield client
             finally:
                 await client.aclose()

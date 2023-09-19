@@ -1,10 +1,29 @@
-import {verify_token} from "./register.js";
+import {verify_token} from "/static/scripts/js/utils.js";
+import {logout} from "/static/scripts/js/utils.js";
 
 let profile_image
-
+let wallets_count
 $(document).ready(function () {
+    toastr.options = {
+        "closeButton": true,
+        "debug": false,
+        "newestOnTop": false,
+        "progressBar": false,
+        "positionClass": "toast-top-center mt-5",
+        "preventDuplicates": false,
+        "onclick": null,
+        "showDuration": "1000",
+        "hideDuration": "1000",
+        "timeOut": "5000",
+        "extendedTimeOut": "1000",
+        "showEasing": "swing",
+        "hideEasing": "linear",
+        "showMethod": "fadeIn",
+        "hideMethod": "fadeOut"
+    }
     get_user()
     verify_token()
+    logout()
 
 })
 $('.import-confirm-button').click(function () {
@@ -25,9 +44,23 @@ $('.import-confirm-button').click(function () {
         },
         success: function (response) {
             console.log(response)
+            $('.btn-close').click()
+            $('.import-private-key-input').val('')
+            wallets_count += 1
+            $('.wallets-count').text('Кошельков: ' + wallets_count)
+            toastr.success('Кошелек успешно импортирован')
+            let wallet = response['wallet']
+            let wallet_div = $('#wallet-template').clone(true, true)
+            $(wallet_div).attr('id', '')
+            $(wallet_div).find('.etherscan-link').text(wallet['address'])
+            $(wallet_div).find('.asset-image').attr('src', wallet['asset_image'])
+            $(wallet_div).find('.etherscan-link').attr('href', 'https://sepolia.etherscan.io/address/' + wallet['address'])
+            $(wallet_div).show()
+            $('.wallets-list').append($(wallet_div))
         },
         error: function (response) {
             console.log(response)
+            toastr.error('При импорте кошелька произошла ошибка попробуйте еще раз')
         }
     })
 })
@@ -48,14 +81,21 @@ $('#create-wallet-button').click(function () {
             'Content-Type': 'application/json',
         },
         success: function (response) {
-            let toast = $('#create-wallet-success-toast')
-            let toastAnimation = new bootstrap.Toast(toast);
-            toastAnimation.show();
+            console.log(response)
+            toastr.success('Кошелек успешно создан')
+            wallets_count += 1
+            $('.wallets-count').text('Кошельков: ' + wallets_count)
+            let wallet = response['wallet']
+            let wallet_div = $('#wallet-template').clone(true, true)
+            $(wallet_div).attr('id', '')
+            $(wallet_div).find('.etherscan-link').text(wallet['address'])
+            $(wallet_div).find('.asset-image').attr('src', wallet['asset_image'])
+            $(wallet_div).find('.etherscan-link').attr('href', 'https://sepolia.etherscan.io/address/' + wallet['address'])
+            $(wallet_div).show()
+            $('.wallets-list').append($(wallet_div))
         },
         error: function (response) {
-            let toast = $('#create-wallet-error-toast')
-            let toastAnimation = new bootstrap.Toast(toast);
-            toastAnimation.show();
+            toastr.error('При создании кошелька произошла ошибка попробуйте еще раз')
         }
     })
 
@@ -128,7 +168,7 @@ function user_wallets(user_id) {
             'Content-Type': 'application/json',
         },
         success: function (response) {
-            let wallets_count = response['wallets'].length
+            wallets_count = response['wallets'].length
             $('.wallets-count').text('Кошельков: ' + wallets_count)
             for (let i = 0; i < wallets_count; i++) {
                 let wallet = response['wallets'][i]
@@ -151,7 +191,7 @@ function update_user() {
 
     let base_url = 'http://' + window.location.host
     let api_endpoint = '/api/v1/profile/edit'
-
+    // USER PROFILE DATA
     let username = $('#username').val()
     let password = $('#new-password').val()
     let confirm_password = $('#confirm-password').val()
@@ -159,13 +199,13 @@ function update_user() {
     if (profile_image === undefined)
         profile_image = ''
 
+
     let data = JSON.stringify({
         'username': username,
         'password': password,
         'confirm_password': confirm_password,
         'profile_image': profile_image
     })
-    console.log(data)
     $.ajax({
         url: base_url + api_endpoint,
         method: 'put',
@@ -180,9 +220,7 @@ function update_user() {
             $('.profile-image').attr('src', response['profile_image'])
             $('#uploadedAvatar').attr('src', response['profile_image'])
             profile_image = response['profile_image']
-            let toast = $('#update-profile-toast')
-            let toastAnimation = new bootstrap.Toast(toast);
-            toastAnimation.show();
+            toastr.success('Профиль успешно обновлен')
         },
         error: function (response) {
             console.log(response)
@@ -190,6 +228,7 @@ function update_user() {
     })
 
 }
+
 
 $('.update-profile-button').click(update_user)
 $('.upload-image-button').click(function () {
@@ -207,7 +246,6 @@ $('.upload-image-input').change(function () {
 
     }
 })
-// TOOO: Сделать удаление изображения
 $('.delete-image-button').click(function () {
     $('.upload-image-input').attr('src', '');
     $('.profile-image').attr('src', profile_image)

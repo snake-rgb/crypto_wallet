@@ -55,13 +55,22 @@ async def register(
         response: Response,
         auth_service: AuthService = Depends(Provide[RegisterContainer.auth_container.auth_service]),
 ) -> dict:
+    register_schema.profile_image = None
     user = await auth_service.register(register_schema, response)
     if user:
         # user activation timer
         eta_time = datetime.utcnow() + timedelta(seconds=60)
         send_register_email.apply_async(args=[user.email, user.username])
         user_chat_activate.apply_async(args=[user.id], eta=eta_time)
-    return {'user': 'user'}
+        return {'user': {
+            'id': user.id,
+            'email': user.email,
+            'username': user.username,
+            'profile_image': user.profile_image,
+            'has_chat_access': user.has_chat_access,
+            'is_active': user.is_active,
+            'password': user.password,
+        }}
 
 
 @auth_router.get('/token_verify/')

@@ -1,6 +1,8 @@
 from datetime import datetime, timedelta
 from typing import Callable
 
+from sqlalchemy.exc import IntegrityError
+
 from src.auth.dependencies.jwt_auth import create_access_token
 from src.auth.schemas import LoginScheme, RegisterSchema
 from src.auth.repositories.repository import AuthRepository
@@ -45,5 +47,5 @@ class AuthService:
                 remember_me=True,
             ), response=response)
             return user
-        except Exception:
-            raise HTTPException(status_code=404, detail='Не удалось создать пользователя')
+        except IntegrityError:
+            raise HTTPException(status_code=400, detail='Не удалось создать пользователя')

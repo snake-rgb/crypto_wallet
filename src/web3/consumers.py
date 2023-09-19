@@ -1,9 +1,8 @@
-from typing import TypedDict
+from decimal import Decimal, getcontext
 
+from fastapi import HTTPException
 from propan.brokers.rabbit import RabbitExchange
 from web3.datastructures import AttributeDict
-from web3.types import TxReceipt
-
 from config_socketio.config_socketio import socket_rabbit_router
 from src.web3.web3_api import Web3API
 from src.core.register import RegisterContainer
@@ -15,7 +14,7 @@ web3_exchange = RabbitExchange(name='web3_exchange')
 async def get_balance(
         data: dict,
 ):
-    web3_api: Web3API = RegisterContainer.api_container.web3_api()
+    web3_api: Web3API = RegisterContainer.web3_container.web3_api()
     return await web3_api.get_balance(data.get('address'))
 
 
@@ -23,7 +22,7 @@ async def get_balance(
 async def get_transaction_count(
         data: dict,
 ):
-    web3_api: Web3API = RegisterContainer.api_container.web3_api()
+    web3_api: Web3API = RegisterContainer.web3_container.web3_api()
     return await web3_api.web3.eth.get_transaction_count(data.get('from_address'))
 
 
@@ -31,7 +30,7 @@ async def get_transaction_count(
 async def chain_id(
         data: dict,
 ):
-    web3_api: Web3API = RegisterContainer.api_container.web3_api()
+    web3_api: Web3API = RegisterContainer.web3_container.web3_api()
     return await web3_api.web3.eth.chain_id
 
 
@@ -39,7 +38,7 @@ async def chain_id(
 async def convert_ether_to_wei(
         data: dict,
 ):
-    web3_api: Web3API = RegisterContainer.api_container.web3_api()
+    web3_api: Web3API = RegisterContainer.web3_container.web3_api()
     return await web3_api.convert_ether_to_wei(data.get('amount'))
 
 
@@ -47,7 +46,7 @@ async def convert_ether_to_wei(
 async def gas_price(
         data: dict,
 ):
-    web3_api: Web3API = RegisterContainer.api_container.web3_api()
+    web3_api: Web3API = RegisterContainer.web3_container.web3_api()
     return web3_api.web3.to_wei(data.get('price'), data.get('units'))
 
 
@@ -55,7 +54,7 @@ async def gas_price(
 async def sign_transaction(
         data: dict,
 ):
-    web3_api: Web3API = RegisterContainer.api_container.web3_api()
+    web3_api: Web3API = RegisterContainer.web3_container.web3_api()
     return await web3_api.sign_transaction(data)
 
 
@@ -63,9 +62,8 @@ async def sign_transaction(
 async def send_raw_transaction(
         data: dict,
 ) -> str:
-    web3_api: Web3API = RegisterContainer.api_container.web3_api()
+    web3_api: Web3API = RegisterContainer.web3_container.web3_api()
     transaction_hash = await web3_api.send_raw_transaction(data)
-
     return str(transaction_hash.hex())
 
 
@@ -73,7 +71,7 @@ async def send_raw_transaction(
 async def get_transaction_by_hash(
         data: dict,
 ):
-    web3_api: Web3API = RegisterContainer.api_container.web3_api()
+    web3_api: Web3API = RegisterContainer.web3_container.web3_api()
     transaction: AttributeDict = await web3_api.web3.eth.get_transaction(data.get('transaction_hash'))
     return {
         'blockHash': transaction.get('blockHash').hex(),
@@ -99,7 +97,7 @@ async def get_transaction_by_hash(
 async def get_transaction_receipt(
         data: dict,
 ):
-    web3_api: Web3API = RegisterContainer.api_container.web3_api()
+    web3_api: Web3API = RegisterContainer.web3_container.web3_api()
     transaction_data: AttributeDict = await web3_api.web3.eth.get_transaction_receipt(data.get('transaction_hash'))
     transaction_receipt: dict = transaction_data.__dict__
     transaction_receipt['blockHash'] = transaction_receipt['blockHash'].hex()
@@ -112,7 +110,7 @@ async def get_transaction_receipt(
 async def get_block_by_number(
         data: dict,
 ):
-    web3_api: Web3API = RegisterContainer.api_container.web3_api()
+    web3_api: Web3API = RegisterContainer.web3_container.web3_api()
     block_data = await web3_api.get_block_by_number(data.get('block_number'))
     block: dict = block_data.__dict__
     return {
@@ -129,3 +127,22 @@ async def get_block_by_number(
             'chainId': transaction.get('chainId'),
         } for transaction in block['transactions']]
     }
+
+
+@socket_rabbit_router.handle('address_is_valid', exchange=web3_exchange)
+async def address_is_valid(
+        data: dict,
+) -> bool:
+    web3_api: Web3API = RegisterContainer.web3_container.web3_api()
+    is_valid = web3_api.web3.is_address(data.get('address'))
+    return is_valid
+
+
+# @socket_rabbit_router.handle('convert_wei_to_ether', exchange=web3_exchange)
+# async def convert_wei_to_ether(
+#         data: dict,
+# ) -> Decimal:
+#     web3_api: Web3API = RegisterContainer.web3_container.web3_api()
+#     value: Decimal = Decimal(data.get('value'))
+#     ether_amount = await web3_api.convert_wei_to_ether(value)
+#     return Decimal(ether_amount).quantize(Decimal('0.000000000000000001'))

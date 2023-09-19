@@ -38,13 +38,7 @@ $(function () {
           orderable: false,
           searchable: false,
           responsivePriority: 3,
-          checkboxes: true,
-          render: function () {
-            return '<input type="checkbox" class="dt-checkboxes form-check-input">';
-          },
-          checkboxes: {
-            selectAllRender: '<input type="checkbox" class="form-check-input">'
-          }
+
         },
         {
           // Avatar image/badge, Name and post

@@ -20,7 +20,15 @@ async def get_users(
         # bearer: HTTPAuthorizationCredentials = Depends(user_auth)
 ) -> dict:
     users = await user_service.get_users()
-    return {'users': users.__repr__()}
+    return {'users': [{
+        'id': user.id,
+        'username': user.username,
+        'password': user.password,
+        'profile_image': user.profile_image,
+        'email': user.email,
+        'is_active': user.is_active,
+        'has_chat_access': user.has_chat_access,
+    } for user in users]}
 
 
 @register_router.get('/get_user_by_id/{user_id}')

@@ -1,4 +1,4 @@
-import {verify_token} from './register.js';
+import {verify_token} from '/static/scripts/js/utils.js';
 // email validation pattern
 $.validator.methods.email = function (value, element) {
     return this.optional(element) || new RegExp("([A-Za-z0-9]+[.-_])*[A-Za-z0-9]+@[A-Za-z0-9-]+(\\.[A-Z|a-z]{2,})+").test(value);
@@ -50,7 +50,7 @@ $('.login-button').click(function () {
         // ajax data
         let email = $('#email').val()
         let password = $('#password').val()
-        let remember_me = $('#remember-me').val()
+        let remember_me = $('#remember_me').prop('checked')
         // ajax url
         let base_url = 'http://' + window.location.host
         let api_endpoint = '/api/v1/login/'
