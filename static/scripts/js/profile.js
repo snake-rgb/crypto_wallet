@@ -67,7 +67,7 @@ $('.import-confirm-button').click(function () {
 $('#create-wallet-button').click(function () {
     // TODO: исправить id asseta при production
     let params = {
-        'asset_id': 2
+        'asset_id': 1
     }
     let base_url = 'http://' + window.location.host
     let api_endpoint = '/api/v1/wallet/create/?' + $.param(params)

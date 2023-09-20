@@ -123,7 +123,7 @@ class WalletRepository:
                 private_key=private_key,
                 user_id=user_id,
                 # hardcode eth asset
-                asset_id=2
+                asset_id=1
             )
             session.add(wallet)
             await session.commit()

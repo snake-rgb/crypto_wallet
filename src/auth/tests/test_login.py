@@ -2,12 +2,11 @@ import pytest
 
 
 @pytest.mark.asyncio
-async def test_create_user(client):
-    response = await client.post("/api/v1/register/", json={
-        "username": "username_test",
+async def test_login(client):
+    response = await client.post("/api/v1/login/", json={
         "email": "user@user.com",
         "password": "1230123viK",
-        "confirm_password": "1230123viK",
+        "remember_me": False
     })
     print(response.json())
     assert response.status_code == 200
