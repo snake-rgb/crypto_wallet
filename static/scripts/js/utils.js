@@ -36,3 +36,29 @@ export function verify_token() {
         }
     )
 }
+
+export function get_user() {
+    let base_url = 'http://' + window.location.host
+    let api_endpoint = '/api/v1/profile/'
+
+    $.ajax({
+        url: base_url + api_endpoint,
+        method: 'get',
+        dataType: "json",
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        success: function (response) {
+            $('.user-name-field').text(response['username'])
+            $('.profile-image').attr('src', response['profile_image'])
+            if (window.location.href === 'http://' + window.location.host + '/chat/') {
+                if (response['has_chat_access'] !== true) {
+                    window.location.href = `http://` + window.location.host + '/profile/'
+                }
+            }
+        },
+        error: function (response) {
+            console.log(response)
+        }
+    })
+}

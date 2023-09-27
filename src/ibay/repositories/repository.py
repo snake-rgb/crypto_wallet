@@ -42,7 +42,7 @@ class IbayRepository:
             else:
                 raise HTTPException(status_code=400, detail=f'Cant find product with id {product_id}')
 
-    async def create_order(self, product_id: int, transaction_id: int, customer_id: int) -> Order:
+    async def create_order(self, product_id: int, transaction_id: int, customer_id: int) -> dict:
         async with self.session_factory() as session:
             order: Order = Order(
                 transaction_id=transaction_id,
@@ -53,7 +53,16 @@ class IbayRepository:
             session.add(order)
             await session.commit()
             await session.refresh(order)
-            return order
+            query = await session.execute(select(Transaction).where(Transaction.id == order.transaction_id))
+            transaction = query.scalar_one_or_none()
+            query = await session.execute(select(Product).where(Product.id == order.product_id))
+            product = query.scalar_one_or_none()
+
+            return {
+                'order': order,
+                'transaction': transaction,
+                'product': product,
+            }
 
     async def get_new_orders(self) -> list[Order]:
         async with self.session_factory() as session:
@@ -84,7 +93,10 @@ class IbayRepository:
     async def get_order_by_id(self, order_id: int) -> Order:
         async with self.session_factory() as session:
             query = await session.execute(
-                select(Order).options(joinedload(Order.transaction), joinedload(Order.product)).where(
+                select(Order).options(
+                    joinedload(Order.transaction),
+                    joinedload(Order.product),
+                    joinedload(Order.return_transaction)).where(
                     Order.id == order_id))
             order = query.scalar_one_or_none()
             if order:
@@ -95,7 +107,8 @@ class IbayRepository:
     async def update_order(self, order_id: int, return_transaction_id: int, status: str) -> Order:
         async with self.session_factory() as session:
             query = await session.execute(
-                select(Order).options(joinedload(Order.transaction)).where(Order.id == order_id))
+                select(Order).options(joinedload(Order.transaction), joinedload(Order.return_transaction)).where(
+                    Order.id == order_id))
             order: Order = query.scalar_one_or_none()
             if order:
                 order.status = status
@@ -109,14 +122,18 @@ class IbayRepository:
 
     async def get_user_orders(self, user_id: int) -> list[Order]:
         async with self.session_factory() as session:
-            query = await session.execute(select(Order).where(Order.customer_id == user_id))
+            query = await session.execute(
+                select(Order).options(joinedload(Order.product), joinedload(Order.transaction),
+                                      joinedload(Order.return_transaction)).where(
+                    Order.customer_id == user_id))
             orders = query.scalars().all()
             return orders
 
     async def get_latest_delivery_order(self) -> Order:
         async with self.session_factory() as session:
             query = await session.execute(
-                select(Order).limit(1).where(Order.status == OrderStatus.DELIVERY,
-                                             Order.return_transaction_id.is_(None)).order_by(Order.date))
+                select(Order).options().limit(1).where(
+                    Order.status == OrderStatus.DELIVERY,
+                    Order.return_transaction_id.is_(None)).order_by(Order.date))
             order = query.scalar_one_or_none()
             return order

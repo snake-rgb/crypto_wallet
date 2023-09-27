@@ -1,5 +1,4 @@
-import {verify_token} from "/static/scripts/js/register.js";
-import {logout} from "/static/scripts/js/profile.js";
+import {logout, verify_token, get_user} from "/static/scripts/js/utils.js";
 
 let socket
 let chatHistoryBody = document.querySelector('.chat-history-body')
@@ -13,66 +12,37 @@ socket = io('ws://localhost:8001/',
 )
 // socket connected event
 socket.on("connect", () => {
-    console.log('Socket connected')
+    console.log('Socket connected sid - ' + socket.id)
     socket.emit('join_chat', {'access_token': Cookies.get('access_token').replace('Bearer ', '')})
 });
 
 socket.on("disconnect", () => {
     console.log('Socket disconnected')
-    // socket.emit('leave_chat', {'access_token': Cookies.get('access_token').replace('Bearer ', '')})
+    socket.emit('leave_chat', {'access_token': Cookies.get('access_token').replace('Bearer ', ''), 'sid': socket.sid})
 });
 
 socket.on("join_chat", (data) => {
-    $.ajax(
-        {
-            url: 'http://' + window.location.host + '/api/v1/users/online',
-            method: 'get',
-            dataType: "json",
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            success: function (response) {
-                console.log(response)
-                $('#chat-list').empty()
-                for (let i = 0; i < response['users'].length; i++) {
-                    let user_template = $('#chat-user-template').clone(true, true)
-                    $(user_template).attr('id', '')
-                    $(user_template).find('.left-users-username').text(response['users'][i]['username'])
-                    $(user_template).find('.left-users-profile-image>img').attr('src', response['users'][i]['profile_image'])
-                    $(user_template).show()
-                    $('#chat-list').append(user_template)
-                }
-            }
+    console.log(data)
+    $('#chat-list').empty()
+    for (let i = 0; i < data.length; i++) {
+        let user_template = $('#chat-user-template').clone(true, true)
+        if ($('#chat-list').find(`.left-users-username[data-user-id=${data[i]['user_id']}]`).length === 0) {
+            $(user_template).attr('id', '')
+            $(user_template).find('.left-users-username').text(data[i]['username'])
+            $(user_template).find('.left-users-username').attr('data-user-id', data[i]['user_id'])
+            $(user_template).find('.left-users-profile-image>img').attr('src', data[i]['profile_image'])
+            $(user_template).show()
+            $('#chat-list').append(user_template)
         }
-    )
+
+    }
 
 
-});
+})
+;
 socket.on("leave_chat", (data) => {
-    $.ajax(
-        {
-            url: 'http://' + window.location.host + '/api/v1/users/online',
-            method: 'get',
-            dataType: "json",
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            success: function (response) {
-                console.log(response)
-                $('#chat-list').empty()
-                for (let i = 0; i < response['users'].length; i++) {
-                    let user_template = $('#chat-user-template').clone(true, true)
-                    $(user_template).attr('id', '')
-                    $(user_template).find('.left-users-username').text(response['users'][i]['username'])
-                    $(user_template).find('.left-users-profile-image>img').attr('src', response['users'][i]['profile_image'])
-                    $(user_template).show()
-                    $('#chat-list').append(user_template)
-                }
-            }
-        }
-    )
-
-
+    console.log('leave chat')
+    console.log(data)
 });
 socket.on("send_message", (data) => {
     if (data['user_id'] !== user_id) {
@@ -105,25 +75,30 @@ $('#attach-doc').change(function () {
     }
 })
 $('.send-msg-btn').click(function () {
+
     let message_template = $('#chat-message-template-right').clone(true, true)
     let message_text = $('.message-input').val()
+    if (message_text && $.trim(message_text).length) {
+        $(message_template).attr('id', '')
+        $(message_template).find('.chat-message-text>p').text(message_text)
+        let profile_image = $('.profile-image').prop('src')
+        $(message_template).find('.chat-message-avatar').prop('src', profile_image)
+        $(message_template).find('.chat-message-image').prop('src', $('#attach-doc').prop('src'))
+        $(message_template).show()
+        $('.message-input').val('')
+        $('#attach-doc').prop('src', '')
+        $('.chat-history').append(message_template)
+        socket.emit('send_message', {
+            'user_id': user_id,
+            'text': message_text,
+            'profile_image': profile_image,
+        })
+        send_message_ajax()
+        scrollToBottom()
+    } else
+        $('.message-input').val('')
 
-    $(message_template).attr('id', '')
-    $(message_template).find('.chat-message-text>p').text(message_text)
 
-    let profile_image = $('.profile-image').prop('src')
-    $(message_template).find('.chat-message-avatar').prop('src', profile_image)
-    $(message_template).show()
-
-    $('.chat-history').append(message_template)
-
-    socket.emit('send_message', {
-        'user_id': user_id,
-        'text': message_text,
-        'profile_image': profile_image,
-    })
-    send_message_ajax()
-    scrollToBottom()
 })
 
 function send_message_ajax() {
@@ -222,7 +197,14 @@ $(document).ready(function () {
         wheelPropagation: false,
         suppressScrollX: true
     });
+    get_user()
     chat_history()
     scrollToBottom()
+
     logout()
+})
+$('.message-input').keyup(function (e) {
+    if (e.keyCode === 13) {  // enter, return
+        $('.send-msg-btn').trigger('click')
+    }
 })

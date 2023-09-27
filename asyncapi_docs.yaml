@@ -1,0 +1,16 @@
+{
+  "asyncapi": "2.3.0",
+  "info": {
+    "title": "Socket.IO documentation",
+    "version": "1.0.0",
+    "description": "Auto-Modern socket.io documentation"
+  },
+  "channels": {
+    "connect": {
+      "description": "This channel is used for connecting and authenticating users. Send Authorization header with Bearer token to be authenticated. debug tokens also works.",
+      "publish": {
+        "summary": "Connect to server"
+      }
+    }
+  }
+}

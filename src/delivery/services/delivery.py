@@ -32,4 +32,4 @@ class DeliveryService:
             return result
 
     async def run_delivery(self) -> bool:
-        return await self.delivery(10000, 'https://www.google.com/search/about/')
+        return await self.delivery(10000, 'https://www.google.com/?hl=')

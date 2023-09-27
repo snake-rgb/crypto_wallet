@@ -40,8 +40,6 @@ class UserService:
     async def chat_activate(self, user_id: int) -> User:
         return await self.user_repository.chat_activate(user_id)
 
-    async def get_online_users(self) -> list[User]:
-        return await self.user_repository.get_online_users()
 
-    async def set_user_is_online(self, user_id: int, status: bool) -> User:
-        return await self.user_repository.set_user_is_online(user_id, status)
+
+

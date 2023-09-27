@@ -45,21 +45,24 @@ async def create_wallet(
 async def get_wallet_transactions(
         address: str,
         request: Request,
-        limit: int | None = 10,
+        limit: int | None = 100,
         cursor: str | None = None,
         page: int | None = None,
         wallet_service: WalletService = Depends(Provide[RegisterContainer.wallet_container.wallet_service]),
         bearer: HTTPAuthorizationCredentials = Depends(user_auth),
 ):
-    result = await wallet_service.get_wallet_transactions(address=address, limit=limit, cursor=cursor, page=page)
-    transactions = result['result']
+    latest_transaction = await wallet_service.get_latest_transaction_by_wallet(address)
+    block_data = await wallet_service.get_transaction_by_hash(latest_transaction.hash)
+    from_block = block_data['blockNumber']
+    result = await wallet_service.get_wallet_transactions(address=address, limit=limit, cursor=cursor, page=page,
+                                                          from_block=from_block)
+    transactions_db = await wallet_service.get_wallet_transactions_from_db(address)
+
     return {
         'draw': request.query_params.get('draw'),
-        "recordsTotal": 20,
-        "recordsFiltered": len(transactions),
-        'cursor': result['cursor'],
-        'page': result['page'],
-        'data': transactions,
+        "recordsTotal": len(transactions_db),
+        "recordsFiltered": len(transactions_db),
+        'data': transactions_db,
     }
 
 

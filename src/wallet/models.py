@@ -1,5 +1,4 @@
 import datetime
-
 from sqlalchemy import Column, Integer, Boolean, Float, ForeignKey, CHAR, String, Numeric, DECIMAL, DateTime, Enum
 from sqlalchemy.orm import relationship
 from sqlalchemy_utils import URLType

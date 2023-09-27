@@ -1,7 +1,8 @@
-import {logout, verify_token} from "/static/scripts/js/utils.js";
+import {logout, verify_token, get_user} from "/static/scripts/js/utils.js";
 
 let socket
 let from_address
+let table
 socket = io('ws://localhost:8001/',
     {
         transports: ["websocket", 'polling'],
@@ -19,7 +20,7 @@ socket.on("disconnect", () => {
 });
 socket.on("receive_transaction", (data) => {
     wallets_balance_update()
-    let value = parseFloat(data['value']).toFixed(18)
+    let value = parseFloat(data['value']).toFixed(6)
     let address = data['address']
     if (data['status'] === 'received') {
         toastr.info(`Получено ${value} ETH на кошелёк.\n ${address} \n<a href="https://sepolia.etherscan.io/tx/${data['hash']}">Ссылка на транзакцию</a>`, 'Новая транзакция')
@@ -28,6 +29,7 @@ socket.on("receive_transaction", (data) => {
         toastr.info(`Снято ${value} ETH с кошелька.\n ${address} \n<a href="https://sepolia.etherscan.io/tx/${data['hash']}">Ссылка на транзакцию</a>`, 'Новая транзакция')
         console.log(`Снято ${value} ETH с кошелька.\n ${address} \n<a href="https://sepolia.etherscan.io/tx/${data['hash']}">Ссылка на транзакцию</a>`)
     }
+    table.draw()
 
 });
 $(document).ready(function () {
@@ -50,6 +52,7 @@ $(document).ready(function () {
     }
     verify_token()
     logout()
+    get_user()
     wallets_init()
 
     $('.watch-transactions-button').click(function () {
@@ -64,9 +67,8 @@ $(document).ready(function () {
         $('#watch-transactions-datatable').DataTable().destroy()
         let tableData
 
-        let table = $('#watch-transactions-datatable').DataTable({
-            pageLength: 25,
-            dom: 'tp',
+        table = $('#watch-transactions-datatable').DataTable({
+            dom: 't',
             ajax: {
                 "data": function () {
                     let info = $('#watch-transactions-datatable').DataTable().page.info();
@@ -112,28 +114,50 @@ $(document).ready(function () {
                     render: function (data, type, row) {
                         if (type === 'display') {
                             if (data) {
-                                data = data / Math.pow(10, 18)
-                                return `${data} ETH`
+                                let value = parseFloat(data).toFixed(5)
+                                return `${value} ETH`
+                            } else {
+                                return `0 ETH`
                             }
                         }
 
                     }
                 },
                 {
-                    'data': 'block_timestamp',
+                    'data': 'age',
                     render: function (data, type, row) {
                         if (type === 'display')
                             if (data) {
                                 let date = parse_date(data)
-                                return `Дни - ${date['days']}, часы - ${date['hours']}, минуты - ${date['minutes']}, секунды -  ${date['seconds']}`
+                                return `${date}`
                             }
                     }
                 },
                 {
-                    'data': 'gas',
+                    'data': 'fee',
+                    render: function (data, type, row) {
+                        if (type === 'display')
+                            if (data) {
+                                let value = parseFloat(data).toFixed(5)
+                                return `${value} ETH`
+                            } else {
+                                return `0 ETH`
+                            }
+                    }
                 },
                 {
-                    'data': 'receipt_status',
+                    'data': 'status',
+                    render: function (data, type, row) {
+                        if (type === 'display')
+                            if (data) {
+                                if (data === 'SUCCESS')
+                                    return `<small class="badge bg-success rounded w-100" style="font-size: 0.7rem;">УСПЕШНО</small>`
+                                if (data === 'FAILED')
+                                    return `<small class="badge bg-danger rounded w-100" style="font-size: 0.7rem;">ПРОВАЛЕНО</small>`
+                                if (data === 'PENDING')
+                                    return `<small class="badge bg-warning rounded w-100" style="font-size: 0.7rem;">В ОЖИДАНИИ</small>`
+                            }
+                    }
                 },
 
             ],
@@ -149,20 +173,7 @@ $(document).ready(function () {
         table.on('init', function () {
         })
         table.on('draw', function () {
-            $('#watch-transactions-datatable_next').click(function () {
-                if (table.ajax.json()['cursor'])
-                    params['cursor'] = table.ajax.json()['cursor']
-                else
-                    params['cursor'] = null
 
-            })
-            $('#watch-transactions-datatable_previous').click(function () {
-                if (table.ajax.json()['cursor'])
-                    params['cursor'] = table.ajax.json()['cursor']
-                else
-                    params['cursor'] = null
-
-            })
         })
 
     })
@@ -207,17 +218,22 @@ function parse_date(target_date) {
     let date = new Date(target_date)
     let current_date = new Date()
     let time_difference = current_date - date
-    let time_difference_milliseconds = Math.abs(time_difference)
-    let days = Math.floor(time_difference_milliseconds / (1000 * 60 * 60 * 24));
-    let hours = Math.floor(time_difference_milliseconds / 3600000);
-    let minutes = Math.floor((time_difference_milliseconds % 3600000) / 60000);
-    let seconds = Math.floor((time_difference_milliseconds % 60000) / 1000);
-    return {
-        'days': days,
-        'hours': hours,
-        'minutes': minutes,
-        'seconds': seconds,
+    // let time_difference_milliseconds = Math.abs(time_difference)
+    let days = Math.floor(time_difference / (1000 * 60 * 60 * 24));
+    let hours = Math.floor((time_difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    let minutes = Math.floor((time_difference % (1000 * 60 * 60)) / (1000 * 60));
+    let seconds = Math.floor((time_difference % (1000 * 60)) / 1000);
+    let result
+    if (days > 0) {
+        result = days + " дней назад";
+    } else if (hours > 0) {
+        result = hours + " часов назад";
+    } else if (minutes > 0) {
+        result = minutes + " минут назад";
+    } else {
+        result = seconds + " секунд назад";
     }
+    return result
 }
 
 function wallets_balance_update() {

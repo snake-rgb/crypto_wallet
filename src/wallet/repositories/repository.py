@@ -1,7 +1,7 @@
 import datetime
 from decimal import Decimal, getcontext
 from typing import Callable, Iterator, Optional
-from sqlalchemy import select
+from sqlalchemy import select, desc, asc
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
@@ -36,7 +36,7 @@ class WalletRepository:
     async def get_wallet(self, address: str) -> Wallet:
         async with self.session_factory() as session:
             result = await session.execute(select(Wallet).where(Wallet.address == address))
-            wallet = result.scalar_one()
+            wallet = result.scalar_one_or_none()
             return wallet
 
     async def create_transaction(self, transaction_hash: str,
@@ -137,8 +137,8 @@ class WalletRepository:
             wallets_address = [wallet.address for wallet in wallets]
             return wallets_address
 
-    async def create_transaction_bulk(self, transactions: list[dict]) -> list[Transaction]:
-        async with self.session_factory() as session:
+    async def create_transaction_bulk(self, transactions: list[dict], moralis_api: bool = None) -> list[Transaction]:
+        async with (self.session_factory() as session):
             db_transactions = []
             for transaction in transactions:
                 result = await session.execute(
@@ -146,24 +146,39 @@ class WalletRepository:
                 transaction_db: Transaction = result.scalar_one_or_none()
 
                 # Convert date from string
-                date_string = transaction.get('age')
+                date_string = transaction.get('block_timestamp').replace(
+                    '.000Z', ''
+                ) if moralis_api else transaction.get('age')
+
                 date_format = '%Y-%m-%dT%H:%M:%S'
                 age = datetime.datetime.strptime(date_string, date_format)
 
+                if moralis_api:
+                    status = TransactionStatus.SUCCESS if transaction.get(
+                        'receipt_status') else TransactionStatus.FAILED
+                    fee = (float(transaction.get('gas')) * float(transaction.get('gas_price'))) / (
+                            10 ** 18)
+                    value = float(transaction.get('value')) / (10 ** 18)
+                else:
+                    status = transaction.get('status')
+                    fee = transaction.get('fee')
+                    value = transaction.get('value')
+
                 if transaction_db:
                     transaction_db.age = age
-                    transaction_db.fee = transaction.get('fee')
-                    transaction_db.status = transaction.get('status')
+                    transaction_db.fee = fee
+                    transaction_db.status = status
                     db_transactions.append(transaction_db)
                 else:
+
                     transaction = Transaction(
                         hash=transaction.get('hash'),
                         from_address=transaction.get('from_address'),
                         to_address=transaction.get('to_address'),
-                        value=transaction.get('value'),
+                        value=value,
                         age=age,
-                        fee=transaction.get('fee'),
-                        status=transaction.get('status')
+                        fee=fee,
+                        status=status
                     )
                     db_transactions.append(transaction)
                     session.add(transaction)
@@ -183,9 +198,26 @@ class WalletRepository:
             wallets = query.scalars().all()
             return wallets
 
-    async def get_wallet_by_address(self, wallet_address) -> Wallet:
+    async def get_wallet_by_address(self, wallet_address: str) -> Wallet:
         async with self.session_factory() as session:
             query = await session.execute(
                 select(Wallet).options(joinedload(Wallet.user)).where(Wallet.address == wallet_address))
             wallet = query.scalar_one_or_none()
             return wallet
+
+    async def get_latest_transaction_by_wallet(self, wallet_address: str) -> Transaction:
+        async with self.session_factory() as session:
+            query = await session.execute(select(Transaction).where(
+                Transaction.from_address == wallet_address or Transaction.to_address == Transaction.to_address
+                and Transaction.status != TransactionStatus.PENDING).order_by(
+                desc('age')))
+            result = query.scalars().first()
+            return result
+
+    async def get_wallet_transactions_from_db(self, wallet_address: str) -> list[Transaction]:
+        async with self.session_factory() as session:
+            query = await session.execute(select(Transaction).where(
+                Transaction.from_address == wallet_address or Transaction.to_address == Transaction.to_address).order_by(
+                desc('id')))
+            result = query.scalars().all()
+            return result

@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from propan import RabbitBroker
 from config import settings
+from src.wallet.service.wallet import WalletService
 from src.web3.web3_api import Web3API
 from .config_fastapi import broker
 from .routers import init_routers
@@ -70,11 +71,6 @@ async def set_last_block(
 @app.get('/test/')
 async def test(
 ):
-    async with RabbitBroker(settings.RABBITMQ_URL) as broker:
-        await broker.publish(
-            {
-                'user_id': 1
-
-            },
-            queue='receive_transaction',
-            exchange='socketio_exchange')
+    wallet_service: WalletService = RegisterContainer.wallet_container.wallet_service()
+    response = await wallet_service.get_latest_transaction_by_wallet('0x9841b300b8853e47b7265dff47fd831642e649e0')
+    return response

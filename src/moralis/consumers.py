@@ -15,6 +15,19 @@ async def get_native_transactions(
     address: str = data.get('address')
     cursor: str = data.get('cursor')
     page: str = data.get('page')
+    from_block: int = data.get('from_block')
     transactions: dict = await moralis_api.get_native_transactions(address=address, limit=limit, cursor=cursor,
-                                                                   page=page)
-    return transactions
+                                                                   page=page, from_block=None)
+    transactions_list = [transactions]
+    while True:
+        transactions = await moralis_api.get_native_transactions(address=address,
+                                                                 limit=limit,
+                                                                 cursor=transactions['cursor'],
+                                                                 page=page,
+                                                                 from_block=from_block
+                                                                 )
+        transactions_list.append(transactions)
+        if transactions.get('cursor') is None:
+            break
+
+    return [transactions['result'] for transactions in transactions_list]

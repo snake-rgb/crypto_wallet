@@ -19,3 +19,10 @@ makemigrations:
 	alembic revision --autogenerate
 migrate:
 	alembic upgrade head
+
+asyncapi_docs:
+	python asyncapi/generator.py
+	sudo ag asyncapi_docs.yaml @asyncapi/html-template -o static/async_api --force-write
+	sudo mv static/async_api/index.html templates/asyncapi_docs
+	sudo chmod 746 templates/asyncapi_docs/index.html
+	python asyncapi/html_fixer.py

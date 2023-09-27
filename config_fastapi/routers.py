@@ -4,6 +4,7 @@ from src.auth.views import auth_view_router
 from src.chat.endpoints.chat import chat_router
 from src.chat.views import chat_view_router
 from src.ibay.endpoints.ibay import ibay_router
+from src.ibay.views import ibay_view_router
 from src.users.endpoints.user_endpoints import register_router
 from src.users.views import user_view_router
 from src.wallet.endpoints.wallet import wallet_router
@@ -23,3 +24,4 @@ def init_routers(app: FastAPI) -> None:
     app.include_router(router=auth_view_router)
     app.include_router(router=chat_view_router)
     app.include_router(router=wallet_view_router)
+    app.include_router(router=ibay_view_router)

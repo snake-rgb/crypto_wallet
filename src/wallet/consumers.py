@@ -13,17 +13,22 @@ wallet_exchange = RabbitExchange(name='wallet_exchange')
 @socket_rabbit_router.handle('send_transaction', exchange=wallet_exchange)
 async def send_transaction(
         data,
-):
+) -> int:
     wallet_service: WalletService = RegisterContainer.wallet_container.wallet_service()
-    await wallet_service.buy_product(data)
+    transaction = await wallet_service.buy_product(data)
+    return transaction.id
 
 
 @socket_rabbit_router.handle('order_refund', exchange=wallet_exchange)
 async def order_refund(
         data,
-):
+) -> dict:
     wallet_service: WalletService = RegisterContainer.wallet_container.wallet_service()
-    await wallet_service.order_refund(data)
+    transaction: Transaction = await wallet_service.order_refund(data)
+    return {
+        'return_transaction_hash': transaction.hash,
+        'return_transaction_id': transaction.id,
+    }
 
 
 @socket_rabbit_router.handle('get_wallets_address_in_block', exchange=wallet_exchange)

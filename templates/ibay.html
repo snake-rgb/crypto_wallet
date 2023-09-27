@@ -107,13 +107,13 @@
                         <div>Профиль</div>
                     </a>
                 </li>
-                <li class="menu-item active">
+                <li class="menu-item">
                     <a href="http://127.0.0.1:8000/wallets/" class="menu-link">
                         <div>Кошельки</div>
                     </a>
                 </li>
-                <li class="menu-item">
-                    <a href="http://127.0.0.1:8000/login/" class="menu-link">
+                <li class="menu-item active">
+                    <a href="http://127.0.0.1:8000/ibay/" class="menu-link">
                         <div>iBay</div>
                     </a>
                 </li>
@@ -168,97 +168,169 @@
             <!-- Content wrapper -->
             <div class="content-wrapper">
                 <!-- Content -->
-                <!--WALLETS BLOCK-->
+                <!--PRODUCTS AND ORDER BLOCK-->
                 <div class="container-fluid flex-grow-1 container-p-y">
                     <div class="card">
-                        <div class="card-header"><h3>Кошельки</h3></div>
-                        <div class="card-body">
-                            <div class="row wallets-list">
+                        <div class="card-header">
+                            <div class="row">
+                                <div class="col-sm-3"><h3>Продукты</h3></div>
+                                <div class="col-sm-3 offset-sm-6 text-end">
+                                    <button class="btn create-product-button"
+                                            style="background-color: #00a6ba; color: white">Создать товар
+                                    </button>
+                                </div>
                             </div>
-                            <!--WALLET TEMPLATE-->
-                            <div id="wallet-template" style="display: none;" class="col-sm-6">
-                                <div class="col-sm-12 d-flex mb-5 wallet-div">
-                                    <!--WALLET ASSET IMAGE-->
-                                    <div class="col-sm-2">
-                                        <img src="/static/assets/img/ethereum/ethereum.png" alt=""
-                                             style="max-height: 100px;" class="wallet-asset-image">
-                                    </div>
-                                    <div class="col-sm-10">
-                                        <div class="d-flex flex-column">
-                                            <span style="font-weight:bolder; overflow: hidden;
-
-                                              ">Адрес: <a
-                                                    href="" class="wallet-address"
-                                                    style="font-weight:bolder;"></a> </span>
-                                            <span class="mt-2" style="font-weight:bolder;">Баланс: <span
-                                                    class="balance-amount"
-                                                    style="font-weight:bolder;">195</span> ETH</span>
-                                            <div class="row mt-2">
-                                                <div class="col-sm-4">
-                                                    <button class="btn watch-transactions-button"
-                                                            style="background: #0a6aa1; color: #fff">
-                                                        Посмотреть
-                                                        транзакции
+                        </div>
+                        <div class="card-body">
+                            <div class="row products-list">
+                            </div>
+                            <!--PRODUCT TEMPLATE-->
+                            <div id="product-template" style="display: none;" class="col-sm-6">
+                                <div class="col-sm-12  mb-5 product-div card">
+                                    <div class="card-body d-flex">
+                                        <!--PRODUCT IMAGE-->
+                                        <div class="col-sm-3 text-center">
+                                            <img src="/static/assets/img/ethereum/ethereum.png" alt=""
+                                                 style="max-height: 200px;" class="product-image img-fluid w-100">
+                                        </div>
+                                        <div class="col-sm-8 offset-sm-1 ">
+                                            <div class="d-flex flex-column">
+                                                <span class="card-text">Название: <span
+                                                        class="title-text">1</span></span>
+                                                <hr>
+                                                <span class="card-text">Адрес: <a class="address-text"
+                                                                                  href="#">1</a></span>
+                                                <hr>
+                                                <span class="card-text">Цена: <span
+                                                        class="price-text">1</span></span>
+                                                <hr>
+                                                <div class="col-sm-2">
+                                                    <button class="btn buy-product-button"
+                                                            style="background-color: #126089; color: #ffffff">Купить
                                                     </button>
-                                                </div>
-                                                <div class="col-sm-4">
-                                                    <button class="btn btn-success send-transaction">Отправить
-                                                        транзакцию
-                                                    </button>
-                                                </div>
-                                                <div class="col-sm-4">
-                                                    <a href="https://sepoliafaucet.com/" target="_blank"
-                                                       class="btn btn-warning overflow-hidden">Получить бесплатные
-                                                        ETH</a>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
+
                                 </div>
                             </div>
 
                         </div>
                     </div>
+                    <div class="card mt-5">
+                        <div class="card-header"><h3>Заказы</h3></div>
+                        <div class="card-body">
+                            <div class="row orders-list">
+
+                            </div>
+                            <!--ORDER TEMPLATE-->
+                            <div id="order-template" class="col-sm-6" style="display: none;">
+                                <div class="col-sm-12  mb-5 product-div card">
+                                    <div class="card-body d-flex">
+                                        <!--PRODUCT IMAGE-->
+                                        <div class="col-sm-3 text-center">
+                                            <img src="/static/assets/img/ethereum/ethereum.png" alt=""
+                                                 style="max-height: 200px;" class="order-image img-fluid w-100">
+                                        </div>
+                                        <div class="col-sm-8 offset-sm-1 ">
+                                            <div class="d-flex flex-column">
+                                                <span>Название: <span
+                                                        class="title-text">1</span></span>
+                                                <hr>
+                                                <span>Транзакция: <a class="transaction-text"
+                                                                     href="#">1</a></span>
+                                                <hr>
+                                                <span>Цена: <span
+                                                        class="price-text">1</span></span>
+                                                <hr>
+                                                <span>Время заказа: <span class="order-time"></span></span>
+                                                <hr>
+                                                <span>Статус: <span class="order-status"></span></span>
+                                                <hr>
+                                                <span>Возврат: <a class="order-return"></a></span>
+                                                <hr>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <!-- / Content -->
-                <!--IMPORT WALLET MODAL-->
-                <div class="modal" tabindex="-1" id="send-transaction-modal">
+                <!--CREATE PRODUCT MODAL-->
+                <div class="modal" tabindex="-1" id="create-product-modal">
                     <div class="modal-dialog">
                         <div class="modal-content">
                             <div class="modal-header">
-                                <h5 class="modal-title">Отправка ETH</h5>
+                                <h5 class="modal-title">Создать товар</h5>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal"
                                         aria-label="Close"></button>
                             </div>
                             <div class="modal-body">
+                                <!--PRODUCT NAME-->
                                 <div class="input-group">
-                                    <span class="input-group-text">Получатель :</span>
-                                    <input type="text" class="form-control to-address-input" placeholder="Введите адрес"
-                                           aria-label="Address"
-                                           aria-describedby="Address">
+                                    <span class="input-group-text">Название</span>
+                                    <input type="text" class="form-control product-name-input"
+                                           placeholder="Введите название товара"
+                                           aria-label="Name"
+                                           aria-describedby="Name">
                                 </div>
+                                <!--WALLETS SELECT-->
                                 <div class="input-group mt-3">
-                                    <span class="input-group-text">Количество :</span>
-                                    <input type="text" class="form-control eth-amount" placeholder="Введите количество"
-                                           aria-label="Amount"
-                                           aria-describedby="Amount">
+                                    <span class="input-group-text">Кошелёк</span>
+                                    <select class="form-select wallet-select" aria-label="Wallet select">
+                                    </select>
                                 </div>
-                                <div class="error-list mt-2 d-flex flex-column">
-                                    <span class="address-error" style="color: #d03131"></span>
-                                    <span class="value-error" style="color: #d03131"></span>
+                                <!--PRICE-->
+                                <div class="input-group mt-3">
+                                    <label class="input-group-text">Цена</label>
+                                    <input type="number" min="0" class="form-control product-price-input"
+                                           placeholder="Введите цену">
+                                </div>
+                                <!--PRODUCT IMAGE-->
+                                <div class="input-group mt-3">
+                                    <label class="input-group-text" for="product-image-upload">Фото</label>
+                                    <input type="file" class="form-control" id="product-image-upload">
                                 </div>
                             </div>
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отменить
                                 </button>
-                                <button type="button" class="btn btn-primary send-transaction-button">Отправить</button>
+                                <button type="button" class="btn btn-primary create-product-submit">Создать</button>
                             </div>
                         </div>
                     </div>
                 </div>
-                <!--TRANSACTION HASH MODAL-->
-                <!--IMPORT WALLET MODAL-->
-                <div class="modal" tabindex="-1" id="hash-transaction-modal">
+                <!--BUY PRODUCT MODAL-->
+                <div class="modal" tabindex="-1" id="buy-product-modal">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Оплата товара <b class="product-name-title"></b></h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                        aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="input-group">
+                                    <span class="input-group-text">Кошёлек</span>
+                                    <select class="form-select buy-product-wallet-select" aria-label="Wallet select">
+                                    </select>
+
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отменить
+                                </button>
+                                <button type="button" class="btn btn-primary buy-product-submit">Купить</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!--TRANSACTION MODAL-->
+                <div class="modal" tabindex="-1" id="transaction-link-modal">
                     <div class="modal-dialog">
                         <div class="modal-content">
                             <div class="modal-header">
@@ -269,54 +341,6 @@
                             <div class="modal-body">
                                 <span>Отправка произведена. <a href=""
                                                                class="transaction-link">Ссылка на транзакцию.</a></span>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <!--WATCH TRANSACTIONS MODAL-->
-                <div class="modal modal-xl" tabindex="-1" id="watch-transactions-modal">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title">Отправка произведена.</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                        aria-label="Close"></button>
-                            </div>
-                            <div class="modal-body">
-                                <div class="card">
-                                    <h5 class="card-header text-center watch-transactions-header">Список транзакций
-                                        ETH</h5>
-                                    <div class="card-datatable text-nowrap">
-                                        <div
-                                                class="dataTables_wrapper dt-bootstrap5 no-footer">
-                                            <div class="table-responsive">
-                                                <table
-                                                        id="watch-transactions-datatable"
-                                                        aria-describedby="watch-transactions-datatable"
-                                                        class="dt-row-grouping table dataTable dtr-column">
-                                                    <thead>
-                                                    <tr>
-                                                        <th>Txn hash</th>
-                                                        <th>From</th>
-                                                        <th>To</th>
-                                                        <th>Value</th>
-                                                        <th>Age</th>
-                                                        <th>Txn Fee</th>
-                                                        <th>Status</th>
-                                                    </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                    </tbody>
-                                                </table>
-                                            </div>
-
-                                        </div>
-                                    </div>
-                                </div>
                             </div>
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть
@@ -381,6 +405,6 @@ https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>
 <!--JQUERY VALIDATION LOCALIZATION-->
 <script src="/static/dist/plugins/jquery_validation/localization/messages_ru.min.js"></script>
 <!--CUSTOM SCRIPTS-->
-<script src="/static/scripts/js/wallets.js" type="module"></script>
+<script src="/static/scripts/js/ibay.js" type="module"></script>
 </body>
 </html>

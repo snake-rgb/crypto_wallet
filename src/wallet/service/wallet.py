@@ -7,6 +7,8 @@ import secrets
 from propan import RabbitBroker
 from web3.datastructures import AttributeDict
 from config import settings
+from src.ibay.enums import OrderStatus
+from src.ibay.models import Order
 from src.wallet.enums import TransactionStatus
 from src.wallet.models import Wallet, Transaction
 from src.wallet.repositories.repository import WalletRepository
@@ -108,6 +110,7 @@ class WalletService:
                         from_address=from_address,
                         to_address=to_address,
                         value=amount,
+                        age=datetime.datetime.now()
                     )
                     return db_transaction
                 else:
@@ -116,7 +119,7 @@ class WalletService:
                 raise HTTPException(status_code=400, detail='not enough eth in wallet')
 
     @staticmethod
-    async def get_wallet_transactions(address: str, limit: int, cursor: str, page: int) -> dict:
+    async def get_wallet_transactions(address: str, limit: int, cursor: str, page: int, from_block=None) -> dict:
         async with RabbitBroker(settings.RABBITMQ_URL) as broker:
             transactions: dict = await broker.publish({
                 'address': address,
@@ -159,6 +162,18 @@ class WalletService:
                 if balance and user_id:
                     wallet = await self.wallet_repository.import_wallet(private_key, address, user_id=user_id)
                     await self.wallet_repository.set_balance(balance, wallet.address)
+
+                    transactions_list = await broker.publish({
+                        'limit': 100,
+                        'address': wallet.address,
+                        'cursor': None,
+                    },
+                        queue='get_native_transactions',
+                        exchange='moralis_exchange',
+                        callback=True
+                    )
+                    [await self.create_transaction_bulk(transactions, moralis_api=True) for transactions in
+                     transactions_list]
                     return wallet
                 else:
                     raise HTTPException(status_code=400, detail='Wallet exception')
@@ -184,29 +199,26 @@ class WalletService:
     async def get_transaction_by_id(self, transaction_id: int) -> Transaction:
         return await self.wallet_repository.get_transaction_by_id(transaction_id)
 
-    async def buy_product(self, data: dict) -> None:
+    async def buy_product(self, data: dict) -> Transaction:
         from_address = data.get('from_address')
         to_address = data.get('to_address')
         amount = data.get('amount')
         transaction = await self.send_transaction(from_address, to_address, amount)
-        async with RabbitBroker(settings.RABBITMQ_URL) as broker:
-            await broker.publish({
-                'product_id': data.get('product_id'),
-                'transaction_id': transaction.id,
-                'customer_id': data.get('customer_id'),
-            }, queue='create_order', exchange='ibay_exchange')
+        return transaction
 
     async def order_refund(self, data) -> None:
         from_address = data.get('from_address')
         to_address = data.get('to_address')
         amount = data.get('amount')
         transaction = await self.send_transaction(from_address, to_address, amount)
-        async with RabbitBroker(settings.RABBITMQ_URL) as broker:
-            await broker.publish({
-                'order_id': data.get('order_id'),
-                'return_transaction_id': transaction.id,
-                'customer_id': data.get('customer_id'),
-            }, queue='order_refund', exchange='ibay_exchange')
+        return transaction
+        # if transaction:
+        #     async with RabbitBroker(settings.RABBITMQ_URL) as broker:
+        #         await broker.publish({
+        #             'order_id': data.get('order_id'),
+        #             'return_transaction_id': transaction.id,
+        #             'customer_id': data.get('customer_id'),
+        #         }, queue='order_refund', exchange='ibay_exchange')
 
     async def create_transaction(
             self,
@@ -244,8 +256,8 @@ class WalletService:
     async def get_user_wallets(self, user_id) -> list[Wallet]:
         return await self.wallet_repository.get_user_wallets(user_id)
 
-    async def create_transaction_bulk(self, transactions: list[dict]) -> list[Transaction]:
-        transactions = await self.wallet_repository.create_transaction_bulk(transactions)
+    async def create_transaction_bulk(self, transactions: list[dict], moralis_api: bool = None) -> list[Transaction]:
+        transactions = await self.wallet_repository.create_transaction_bulk(transactions, moralis_api)
         if transactions:
             for transaction in transactions:
                 if transaction.status != TransactionStatus.PENDING:
@@ -282,3 +294,9 @@ class WalletService:
         wallet = await self.wallet_repository.get_wallet_by_address(wallet_address)
         if wallet:
             return wallet
+
+    async def get_latest_transaction_by_wallet(self, wallet_address: str) -> Transaction:
+        return await self.wallet_repository.get_latest_transaction_by_wallet(wallet_address)
+
+    async def get_wallet_transactions_from_db(self, wallet_address: str) -> list[Transaction]:
+        return await self.wallet_repository.get_wallet_transactions_from_db(wallet_address)

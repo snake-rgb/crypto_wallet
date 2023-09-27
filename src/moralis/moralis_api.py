@@ -9,13 +9,14 @@ class MoralisAPI:
     def __init__(self, api_key: str):
         self.api_key = api_key
 
-    async def get_native_transactions(self, address: str, limit: int, cursor: str, page: int) -> dict:
+    async def get_native_transactions(self, address: str, limit: int, cursor: str, page: int, from_block: int) -> dict:
         url = f'https://deep-index.moralis.io/api/v2.2/{address}?chain=sepolia'
         if limit:
             url += f'&limit={limit}'
-
         if cursor:
             url += f'&cursor={cursor}'
+        if from_block:
+            url += f'&from_block={from_block}'
         headers = {
             "X-API-Key": self.api_key
         }

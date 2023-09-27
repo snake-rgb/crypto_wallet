@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 import environ
-from fastapi_mail import ConnectionConfig
+# from fastapi_mail import ConnectionConfig
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -40,18 +40,18 @@ DB_URL = (f"postgresql+asyncpg://{DATABASE['user']}:"
           f":{DATABASE['port']}"
           f"/{DATABASE['name']}")
 
-EMAIL_CONF = ConnectionConfig(
-    MAIL_USERNAME=env('EMAIL_USER'),
-    MAIL_PASSWORD=env('EMAIL_PASSWORD'),
-    MAIL_PORT=env('EMAIL_PORT'),
-    MAIL_SERVER=env('EMAIL_HOST'),
-    MAIL_STARTTLS=False,
-    MAIL_SSL_TLS=True,
-    MAIL_FROM=env('EMAIL_USER'),
-    USE_CREDENTIALS=True,
-    VALIDATE_CERTS=True,
-    TEMPLATE_FOLDER=BASE_DIR / 'src/users/templates',
-)
+# EMAIL_CONF = ConnectionConfig(
+#     MAIL_USERNAME=env('EMAIL_USER'),
+#     MAIL_PASSWORD=env('EMAIL_PASSWORD'),
+#     MAIL_PORT=env('EMAIL_PORT'),
+#     MAIL_SERVER=env('EMAIL_HOST'),
+#     MAIL_STARTTLS=False,
+#     MAIL_SSL_TLS=True,
+#     MAIL_FROM=env('EMAIL_USER'),
+#     USE_CREDENTIALS=True,
+#     VALIDATE_CERTS=True,
+#     TEMPLATE_FOLDER=BASE_DIR / 'src/users/templates',
+# )
 RABBITMQ_URL = env('RABBITMQ_URL')
 REDIS_URL = env('REDIS_URL')
 CELERY_RESULT_BACKEND = env('CELERY_RESULT_BACKEND')
