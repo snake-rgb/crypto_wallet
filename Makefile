@@ -1,7 +1,7 @@
 celery_run:
 	celery -A config_celery.celery_config:celery worker --loglevel=INFO --concurrency 8
 make flower_run:
-	celery --broker=amqp://guest:guest@localhost:5672// flower
+	celery --broker=amqp://guest:guest@rabbitmq:5672// flower
 beat_run:
 	celery
 
@@ -10,7 +10,7 @@ socketio_run:
 socketio_client_run:
 	python config_socketio/config_socketio_client.py
 run:
-	uvicorn config_fastapi.app:app --reload --port 8000
+	uvicorn config_fastapi.app:app --reload --host 0.0.0.0 --port 8000
 
 delivery_run:
 	python src/delivery/google_request.py
@@ -26,3 +26,7 @@ asyncapi_docs:
 	sudo mv static/async_api/index.html templates/asyncapi_docs
 	sudo chmod 746 templates/asyncapi_docs/index.html
 	python asyncapi/html_fixer.py
+
+init_database:
+	python init_script.py
+	make run

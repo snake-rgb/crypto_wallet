@@ -43,7 +43,7 @@ class UserRepository:
                 result = await session.execute(select(User).where(User.id == 1))
                 user = result.scalar_one()
 
-            update_data = profile_schema.model_dump()
+            update_data = profile_schema.dict()
 
             if hashed_password:
                 user.password = hashed_password

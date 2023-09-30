@@ -21,7 +21,6 @@ class RegisterContainer(containers.DeclarativeContainer):
             'config_fastapi',
             'config_socketio',
             'src.core',
-
             'src.auth',
             'src.base',
             'src.boto3',

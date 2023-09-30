@@ -29,7 +29,7 @@ class AuthRepository:
     async def register(self, register_schema: RegisterSchema, hashed_password) -> User:
         async with self.session_factory() as session:
             try:
-                user = User(**register_schema.model_dump(exclude=['password', 'confirm_password']),
+                user = User(**register_schema.dict(exclude={'password', 'confirm_password'}),
                             password=hashed_password)
                 session.add(user)
                 await session.commit()
