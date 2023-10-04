@@ -6,7 +6,7 @@ beat_run:
 	celery
 
 socketio_run:
-	 sanic config_socketio.config_socketio:sanic_app --dev --port 8001 --workers 1 --reload
+	 sanic config_socketio.config_socketio:sanic_app --dev --host 0.0.0.0 --port 8001 --workers 1 --reload
 socketio_client_run:
 	python config_socketio/config_socketio_client.py
 run:
@@ -28,5 +28,22 @@ asyncapi_docs:
 	python asyncapi/html_fixer.py
 
 init_database:
+	export TZ="Europe/Kiev"
 	python init_script.py
 	make run
+
+
+docker_run:
+	sudo docker-compose up
+
+docker_build:
+	sudo docker-compose build
+
+docker_down:
+	sudo docker-compose down -v
+
+rabbit_server_stop:
+	sudo systemctl stop rabbitmq-server
+
+rabbit_server_start:
+	sudo systemctl start rabbitmq-server

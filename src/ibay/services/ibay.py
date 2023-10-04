@@ -6,8 +6,9 @@ from fastapi.security import HTTPAuthorizationCredentials
 from propan import RabbitBroker
 from config import settings
 from src.auth.dependencies import jwt_auth
+from src.delivery.models import Order
 from src.ibay.enums import OrderStatus
-from src.ibay.models import Product, Order
+from src.ibay.models import Product
 from src.ibay.repositories.repository import IbayRepository
 from src.ibay.schemas import ProductSchema, OrderSchema
 from src.wallet.models import Transaction
@@ -31,7 +32,7 @@ class IbayService:
     async def buy_product(self, order_schema: OrderSchema, bearer: HTTPAuthorizationCredentials) -> Product:
         customer_id = jwt_auth.decode_token(bearer.credentials).get('user_id')
         product = await self.get_product_by_id(order_schema.product_id)
-        # TODO: Перенести логику создания ордера из кошелька сюда
+
         async with RabbitBroker(settings.RABBITMQ_URL) as broker:
             transaction_id: int = await broker.publish({
                 'from_address': order_schema.from_address,

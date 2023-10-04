@@ -104,7 +104,7 @@
                     </div>
                     <!-- /Logo -->
 
-                    <form class="mb-3 auth-form" method="POST">
+                    <form id="form-authentication" class="mb-3">
                         <div class="mb-3">
                             <label for="email" class="form-label">Email</label>
                             <input
@@ -133,13 +133,24 @@
                                         class="ti ti-eye-off"></i></span>
                             </div>
                         </div>
-
+                        <div class="mb-3">
+                            <div class="form-check remember-me-check">
+                                <input class="form-check-input" type="checkbox" name="remember_me" id="remember_me"/>
+                                <label class="form-check-label" for="remember_me">Запомнить меня</label>
+                            </div>
+                        </div>
                         <div class="mb-3">
                             <button class="btn btn-primary d-grid w-100 login-button" type="button">Войти</button>
                         </div>
                     </form>
 
-
+                    <p class="text-center">
+                        <span>Нажмите </span>
+                        <a href="/register/">
+                            <span class="text-decoration-underline">РЕГИСТРАЦИЯ</span>
+                        </a>
+                        <span>если у вас нет аккаунта.</span>
+                    </p>
                 </div>
             </div>
             <!-- /Register -->
@@ -184,20 +195,8 @@ https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>
 <!--JQUERY VALIDATION LOCALIZATION-->
 <script src="/static/dist/plugins/jquery_validation/localization/messages_ru.min.js"></script>
 <!--CUSTOM SCRIPTS-->
-<script>
-    $('.login-button').click(function () {
-            let email = $('.email').val()
-            let password = $('#password').val()
-            let params = {
-                'email': email,
-                'password': password
-            }
+<script src="/static/scripts/js/login.js" type="module"></script>
 
-            $('.auth-form').attr('action', `http://${window.location.host}/admin/login?` + $.param(params))
-            $('.auth-form').submit()
-        }
-    )
-</script>
 
 </body>
 </html>

@@ -1,3 +1,4 @@
+from sqladmin import ModelView
 from sqlalchemy import Column
 from sqlalchemy.orm import relationship
 from sqlalchemy.types import String, Integer, Boolean
@@ -16,14 +17,9 @@ class User(Base):
         default='https://cryptowalletbucket.s3.eu-north-1.amazonaws.com/images/standart_image.jpg')
     is_active = Column(Boolean, default=True)
     has_chat_access = Column(Boolean, default=False)
+    is_admin = Column(Boolean, default=False)
 
-    def __repr__(self):
-        return (
-            f'id - {str(self.id)}\n'
-            f'Username - {self.username}\n'
-            f'Email - {self.email}\n'
-            f'Password - {self.password}\n'
-            f'Profile image - {self.profile_image}\n'
-            f'Is active - {self.is_active}\n'
-            f'Has chat access - {self.is_active}\n'
-        )
+
+class UserAdmin(ModelView, model=User):
+    column_list = [User.id, User.username, User.email, User.password, User.profile_image, User.is_active,
+                   User.has_chat_access, User.is_admin]

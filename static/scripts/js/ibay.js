@@ -3,7 +3,7 @@ import {logout, verify_token, get_user} from "/static/scripts/js/utils.js";
 let socket
 let wallets
 let product_id
-socket = io('ws://localhost:8001/',
+socket = io('ws://0.0.0.0:8001/',
     {
         transports: ["websocket", 'polling'],
         autoConnect: true,
@@ -19,7 +19,6 @@ socket.on("disconnect", () => {
     console.log('Socket disconnected')
 });
 socket.on("order_status", (data) => {
-    console.log('Order status')
     let order_id = data['order_id']
     $(`.product-div[data-order-id=${order_id}]`).find('.order-status').empty()
     $(`.product-div[data-order-id=${order_id}]`).find('.order-status').append(status_badge(data['status']))
@@ -28,6 +27,17 @@ socket.on("order_status", (data) => {
     $(`.product-div[data-order-id=${order_id}]`).find('.order-return')
         .attr('href', 'https://sepolia.etherscan.io/tx/' + data['return_transaction_hash'])
     console.log(data)
+});
+socket.on("receive_transaction", (data) => {
+    let value = parseFloat(data['value']).toFixed(6)
+    console.log('transaction received' + data['address'])
+    let address = data['address']
+    if (data['status'] === 'received') {
+        toastr.info(`Получено ${value} ETH на кошелёк.\n ${address} \n<a href="https://sepolia.etherscan.io/tx/${data['hash']}">Ссылка на транзакцию</a>`, 'Новая транзакция')
+    } else {
+        toastr.info(`Снято ${value} ETH с кошелька.\n ${address} \n<a href="https://sepolia.etherscan.io/tx/${data['hash']}">Ссылка на транзакцию</a>`, 'Новая транзакция')
+
+    }
 });
 
 socket.on("create_order", (data) => {
@@ -164,6 +174,7 @@ function add_order(id, title, transaction_hash, price, image, return_transaction
     $(product_template).find('.title-text').text(title)
     $(product_template).find('.transaction-text').text(transaction_hash)
     $(product_template).find('.transaction-text').attr('href', 'https://sepolia.etherscan.io/tx/' + transaction_hash)
+    $('.transaction-link').attr('href', `https://sepolia.etherscan.io/tx/${transaction_hash}`)
     $(product_template).find('.price-text').text(price + ' ETH')
     $(product_template).find('.order-status').empty()
     $(product_template).find('.order-status').append(status_badge(status))

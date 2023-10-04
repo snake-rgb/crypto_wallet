@@ -37,6 +37,17 @@ class AuthRepository:
             except IntegrityError:
                 raise HTTPException(status_code=400, detail='Email already exist')
 
+    async def register_superuser(self, register_schema: RegisterSchema, hashed_password) -> User:
+        async with self.session_factory() as session:
+            try:
+                user = User(**register_schema.dict(exclude={'password', 'confirm_password'}),
+                            password=hashed_password, is_admin=True, has_chat_access=True)
+                session.add(user)
+                await session.commit()
+                return user
+            except IntegrityError:
+                raise HTTPException(status_code=400, detail='Email already exist')
+
 
 class NotFoundError(Exception):
     entity_name: str

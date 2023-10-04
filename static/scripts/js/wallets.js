@@ -21,13 +21,13 @@ socket.on("disconnect", () => {
 socket.on("receive_transaction", (data) => {
     wallets_balance_update()
     let value = parseFloat(data['value']).toFixed(6)
+    console.log('transaction received' + data['address'])
     let address = data['address']
     if (data['status'] === 'received') {
         toastr.info(`Получено ${value} ETH на кошелёк.\n ${address} \n<a href="https://sepolia.etherscan.io/tx/${data['hash']}">Ссылка на транзакцию</a>`, 'Новая транзакция')
-        console.log(`Получено ${value} ETH на кошелёк.\n ${address} \n<a href="https://sepolia.etherscan.io/tx/${data['hash']}">Ссылка на транзакцию</a>`)
     } else {
         toastr.info(`Снято ${value} ETH с кошелька.\n ${address} \n<a href="https://sepolia.etherscan.io/tx/${data['hash']}">Ссылка на транзакцию</a>`, 'Новая транзакция')
-        console.log(`Снято ${value} ETH с кошелька.\n ${address} \n<a href="https://sepolia.etherscan.io/tx/${data['hash']}">Ссылка на транзакцию</a>`)
+
     }
     table.draw()
 
@@ -167,6 +167,7 @@ $(document).ready(function () {
             ordering: false,
             initComplete: function () {
                 tableData = table.ajax.json().data;
+
             }
         });
 
@@ -177,7 +178,9 @@ $(document).ready(function () {
         })
 
     })
-
+    $('.test-button').click(function () {
+        table.draw()
+    })
 })
 
 function wallets_init() {
@@ -347,4 +350,6 @@ $('#send-transaction-modal').on('hidden.bs.modal', function (e) {
 })
 
 
-
+// $('#watch-transactions-modal').on('hidden.bs.modal', function (e) {
+//     $('#watch-transactions-datatable').DataTable().destroy()
+// })

@@ -1,7 +1,11 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from propan import RabbitBroker
+from sqladmin import Admin
+from starlette.middleware.sessions import SessionMiddleware
+
 from config import settings
+from src.sqladmin.auth import AdminAuth
+from src.users.models import UserAdmin
 from src.wallet.service.wallet import WalletService
 from src.web3.web3_api import Web3API
 from .config_fastapi import broker
@@ -11,6 +15,7 @@ from fastapi.staticfiles import StaticFiles
 from config_socketio.config_socketio import socket_rabbit_router, sanic_app
 from src.core.database import Database
 from src.core.register import RegisterContainer
+from .sqladmin_views_routes import init_sqladmin_routes
 
 # Настройки CORS
 origins = [
@@ -24,7 +29,6 @@ origins = [
 def create_app() -> FastAPI:
     # fast api
     fast_api_app = FastAPI()
-
     fast_api_app.add_middleware(
         CORSMiddleware,
         allow_origins=['*'],
@@ -32,12 +36,16 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+    # fast_api_app.add_middleware(SessionMiddleware, secret_key=settings.SECRET_KEY)
     init_routers(fast_api_app)
 
     return fast_api_app
 
 
 app = create_app()
+admin = Admin(app, RegisterContainer.core_container.db().engine,
+              authentication_backend=AdminAuth(secret_key=settings.SECRET_KEY),
+              logo_url='/static/assets/img/favicon/favicon.ico')
 
 
 @app.on_event('startup')
@@ -48,6 +56,7 @@ async def startup():
     app.container = container
 
     app.broker = broker
+    await init_sqladmin_routes(admin)
     app.broker.include_router(socket_rabbit_router)
     await broker.start()
     app.mount("/socket.io", sanic_app, name='socket.io')
@@ -72,5 +81,5 @@ async def set_last_block(
 async def test(
 ):
     wallet_service: WalletService = RegisterContainer.wallet_container.wallet_service()
-    response = await wallet_service.get_latest_transaction_by_wallet('0x9841b300b8853e47b7265dff47fd831642e649e0')
-    return response
+    web3_api: Web3API = RegisterContainer.web3_container.web3_api()
+    return await wallet_service.get_wallet_by_address('0xd8f38daa59799900b9629622b8d9b17a3cfd4ba9')

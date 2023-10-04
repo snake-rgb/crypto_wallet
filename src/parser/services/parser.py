@@ -91,7 +91,9 @@ class ParserService:
     async def start_parse(self, block_number: int):
         # block numbers from redis and web3
         redis_last_block_bytes: bytes = await self.redis.get('last_block_number')
-        redis_last_block_number: int = int(redis_last_block_bytes.decode('utf-8'))
+        redis_last_block_number: int = int(
+            redis_last_block_bytes.decode('utf-8')) if redis_last_block_bytes is not None else block_number
+
         while redis_last_block_number < block_number:
             # run task
             result = self.celery.send_task('src.parser.tasks.parse_block', args=[redis_last_block_number])

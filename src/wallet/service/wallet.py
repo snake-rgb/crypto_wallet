@@ -1,17 +1,17 @@
 import datetime
-from _decimal import Decimal, getcontext
+from _decimal import Decimal
 
+import pytz
 from fastapi import HTTPException
 from eth_account import Account
 import secrets
 from propan import RabbitBroker
 from web3.datastructures import AttributeDict
 from config import settings
-from src.ibay.enums import OrderStatus
-from src.ibay.models import Order
 from src.wallet.enums import TransactionStatus
-from src.wallet.models import Wallet, Transaction
+from src.wallet.models import Wallet, Transaction, Asset
 from src.wallet.repositories.repository import WalletRepository
+from src.wallet.schemas import AssetSchema
 
 
 class WalletService:
@@ -69,7 +69,7 @@ class WalletService:
                 exchange='web3_exchange',
                 callback=True)
             gas_price = await broker.publish({
-                'price': 50,
+                'price': 100,
                 'units': 'gwei'
             },
                 queue='gas_price',
@@ -106,9 +106,9 @@ class WalletService:
                         callback=True)
 
                     db_transaction = await self.wallet_repository.create_transaction(
-                        transaction_hash=transaction_hash,
-                        from_address=from_address,
-                        to_address=to_address,
+                        transaction_hash=transaction_hash.lower(),
+                        from_address=from_address.lower(),
+                        to_address=to_address.lower(),
                         value=amount,
                         age=datetime.datetime.now()
                     )
@@ -126,6 +126,7 @@ class WalletService:
                 'limit': f'{limit}',
                 'cursor': cursor,
                 'page': page,
+                'from_block': from_block,
             },
                 queue='get_native_transactions',
                 exchange='moralis_exchange',
@@ -165,7 +166,7 @@ class WalletService:
 
                     transactions_list = await broker.publish({
                         'limit': 100,
-                        'address': wallet.address,
+                        'address': wallet.address.lower(),
                         'cursor': None,
                     },
                         queue='get_native_transactions',
@@ -188,7 +189,7 @@ class WalletService:
     async def get_transaction_receipt(transaction_hash: str) -> AttributeDict:
         async with RabbitBroker(settings.RABBITMQ_URL) as broker:
             transaction_receipt: dict = await broker.publish({
-                'transaction_hash': transaction_hash,
+                'transaction_hash': transaction_hash.lower(),
             },
                 queue='get_transaction_receipt',
                 exchange='web3_exchange',
@@ -212,13 +213,6 @@ class WalletService:
         amount = data.get('amount')
         transaction = await self.send_transaction(from_address, to_address, amount)
         return transaction
-        # if transaction:
-        #     async with RabbitBroker(settings.RABBITMQ_URL) as broker:
-        #         await broker.publish({
-        #             'order_id': data.get('order_id'),
-        #             'return_transaction_id': transaction.id,
-        #             'customer_id': data.get('customer_id'),
-        #         }, queue='order_refund', exchange='ibay_exchange')
 
     async def create_transaction(
             self,
@@ -231,7 +225,7 @@ class WalletService:
             fee: float,
     ) -> Transaction:
         transaction: Transaction = await self.wallet_repository.create_transaction(
-            transaction_hash=transaction_hash,
+            transaction_hash=transaction_hash.lower(),
             from_address=from_address,
             to_address=to_address,
             value=value,
@@ -258,7 +252,8 @@ class WalletService:
 
     async def create_transaction_bulk(self, transactions: list[dict], moralis_api: bool = None) -> list[Transaction]:
         transactions = await self.wallet_repository.create_transaction_bulk(transactions, moralis_api)
-        if transactions:
+        # TODO: if dont work delete moralis_api
+        if transactions and moralis_api is None:
             for transaction in transactions:
                 if transaction.status != TransactionStatus.PENDING:
                     from_wallet = await self.get_wallet_by_address(transaction.from_address)
@@ -267,8 +262,8 @@ class WalletService:
                         async with RabbitBroker(settings.RABBITMQ_URL) as broker:
                             await broker.publish(
                                 {
-                                    'hash': transaction.hash,
-                                    'value': transaction.value + Decimal(transaction.fee),
+                                    'hash': transaction.hash.lower(),
+                                    'value': Decimal(transaction.value) + Decimal(transaction.fee),
                                     'address': transaction.to_address,
                                     'status': 'send',
                                     'user_id': from_wallet.user_id
@@ -279,7 +274,7 @@ class WalletService:
                         async with RabbitBroker(settings.RABBITMQ_URL) as broker:
                             await broker.publish(
                                 {
-                                    'hash': transaction.hash,
+                                    'hash': transaction.hash.lower(),
                                     'value': transaction.value,
                                     'status': 'received',
                                     'address': transaction.to_address,
@@ -291,12 +286,37 @@ class WalletService:
         return transactions
 
     async def get_wallet_by_address(self, wallet_address: str) -> Wallet:
-        wallet = await self.wallet_repository.get_wallet_by_address(wallet_address)
-        if wallet:
-            return wallet
+        async with RabbitBroker(settings.RABBITMQ_URL) as broker:
+            wallet_address = await broker.publish(
+                {
+                    'wallet_address': wallet_address,
+                },
+                queue='to_checksum_address',
+                exchange='web3_exchange',
+                callback=True
+            )
+            wallet = await self.wallet_repository.get_wallet_by_address(wallet_address)
+            if wallet:
+                return wallet
 
     async def get_latest_transaction_by_wallet(self, wallet_address: str) -> Transaction:
         return await self.wallet_repository.get_latest_transaction_by_wallet(wallet_address)
 
     async def get_wallet_transactions_from_db(self, wallet_address: str) -> list[Transaction]:
         return await self.wallet_repository.get_wallet_transactions_from_db(wallet_address)
+
+    async def create_asset(self, asset_schema: AssetSchema) -> Asset:
+        async with RabbitBroker(settings.RABBITMQ_URL) as broker:
+            image = await broker.publish(
+                {
+                    'image': asset_schema.image,
+                },
+                queue='upload_image',
+                exchange='boto3_exchange',
+                callback=True)
+            if image is not None:
+                asset_schema.image = image
+                return await self.wallet_repository.create_asset(asset_schema)
+            else:
+                asset_schema.image = 'https://cryptowalletbucket.s3.eu-north-1.amazonaws.com/images/ethereum.png'
+                return await self.wallet_repository.create_asset(asset_schema)

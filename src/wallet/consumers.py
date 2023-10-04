@@ -1,6 +1,4 @@
 from datetime import datetime
-
-from hexbytes import HexBytes
 from propan.brokers.rabbit import RabbitExchange
 from config_socketio.config_socketio import socket_rabbit_router
 from src.core.register import RegisterContainer

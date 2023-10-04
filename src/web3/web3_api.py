@@ -57,3 +57,7 @@ class Web3API:
                 WebsocketProviderV2(self.wss_provider_url, websocket_kwargs={'max_size': 5 ** 20, })
         ) as web3:
             return await web3.eth.get_block(block_identifier=block_number, full_transactions=True)
+
+    async def to_checksum_address(self, wallet_address: str) -> str:
+        wallet_address: str = self.web3_socket.to_checksum_address(wallet_address)
+        return wallet_address

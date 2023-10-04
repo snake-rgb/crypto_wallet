@@ -9,7 +9,7 @@ auth_view_router = APIRouter()
 
 @auth_view_router.get("/login/", response_class=HTMLResponse)
 async def login(request: Request):
-    return templates.TemplateResponse("login.html", context={'request': request})
+    return templates.TemplateResponse("user_login.html", context={'request': request})
 
 
 @auth_view_router.get("/register/", response_class=HTMLResponse)

@@ -22,9 +22,6 @@ socket_rabbit_router = RabbitRouter()
 redis: Redis = RegisterContainer.parser_container.redis()
 
 
-# online_users = {}
-
-
 @sanic_app.after_reload_trigger
 @sanic_app.main_process_start
 async def main_start(sanic: Sanic):
@@ -45,7 +42,10 @@ async def get_block_latest(
     while True:
         latest_block_number: str = str(await web3_api.get_block_number_latest())
         redis_last_block_bytes: bytes = await redis.get('last_block_number')
-        redis_last_block_number: str = redis_last_block_bytes.decode('utf-8')
+        if redis_last_block_bytes:
+            redis_last_block_number: str = redis_last_block_bytes.decode('utf-8')
+        else:
+            redis_last_block_number: str = latest_block_number
         logger.info(f'{redis_last_block_number} - {latest_block_number}')
         # send last block number
         async with RabbitBroker(settings.RABBITMQ_URL) as broker:
@@ -65,8 +65,7 @@ async def connect(
         sid: str,
         environ,
 ):
-    sio.enter_room(sid, room='chat_room')
-    print(f"Client {sid} connected chat")
+    print(f'Client connected {sid}')
 
 
 @sio.on("disconnect")
@@ -78,7 +77,6 @@ async def disconnect(sid):
     user = await user_service.profile(access_token)
     await sio.emit('leave_chat', room='chat_room', data={'user_id': user.id})
     await remove_user_from_redis(sid)
-    # await redis.set('online_users', json.dumps(await redis.get('online_users')))
     print(f"Client {sid} disconnected")
 
 
@@ -96,6 +94,8 @@ async def event_subscription(
 
 @sio.on("join_chat")
 async def join_chat(sid, data):
+    sio.enter_room(sid, room='chat_room')
+    print(f"Client {sid} connected chat")
     user_service: UserService = RegisterContainer.user_container.user_service()
     user = await user_service.profile(data.get('access_token'))
     await sio.save_session(sid, {'access_token': data.get('access_token'), 'user_id': user.id})
@@ -117,9 +117,9 @@ async def send_message(sid, data):
                    data,
                    )
 
-
-sanic_app.add_task(get_block_latest())
 sanic_app.add_task(delivery())
+sanic_app.add_task(get_block_latest())
+
 
 
 async def add_user_to_redis(sid, data: dict):
@@ -133,6 +133,9 @@ async def add_user_to_redis(sid, data: dict):
 
 
 async def remove_user_from_redis(sid):
-    online_users: dict = json.loads(await redis.get('online_users'))
-    online_users.pop(sid)
-    await redis.set('online_users', json.dumps(online_users))
+    try:
+        online_users: dict = json.loads(await redis.get('online_users'))
+        online_users.pop(sid)
+        await redis.set('online_users', json.dumps(online_users))
+    except KeyError:
+        pass

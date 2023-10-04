@@ -1,5 +1,7 @@
+import datetime
 from typing import Callable
 
+import pytz
 from sqlalchemy import select, asc
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
@@ -21,7 +23,8 @@ class ChatRepository:
             message = Message(
                 text=message_schema.text,
                 image=message_schema.image,
-                user_id=user_id
+                user_id=user_id,
+                date=datetime.datetime.now()
             )
             session.add(message)
             await session.commit()
@@ -31,9 +34,9 @@ class ChatRepository:
     async def get_messages(self, limit: int) -> list[Message]:
         async with self.session_factory() as session:
             query = await session.execute(
-                select(Message).options(joinedload(Message.user)).order_by(asc(Message.id)))
+                select(Message).options(joinedload(Message.user)).order_by(desc(Message.date)))
             messages = query.scalars().fetchmany(limit)
-        return messages
+        return messages[::-1]
 
     async def get_user_messages_count(self, user_id: int) -> int:
         async with self.session_factory() as session:

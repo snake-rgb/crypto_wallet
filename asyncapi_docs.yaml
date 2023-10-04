@@ -3,13 +3,314 @@
   "info": {
     "title": "Socket.IO documentation",
     "version": "1.0.0",
-    "description": "Auto-Modern socket.io documentation"
+    "description": "Crypto Wallet socket.io documentation"
+  },
+  "servers": {
+    "rabbitmq": {
+      "url": "amqp://localhost:5672",
+      "protocol": "amqp",
+      "protocolVersion": "0.9.1",
+      "description": "RabbitMQ development server"
+    },
+    "socketio": {
+      "url": "http://0.0.0.0:8001/socket.io",
+      "protocol": "wss",
+      "protocolVersion": "5",
+      "description": "Socketio development server"
+    }
   },
   "channels": {
-    "connect": {
-      "description": "This channel is used for connecting and authenticating users. Send Authorization header with Bearer token to be authenticated. debug tokens also works.",
+    "disconnect": {
+      "description": "This channel is used for disconnecting users and delete them from list of online users and leave chat_room, emit event about user who leave from room",
       "publish": {
-        "summary": "Connect to server"
+        "summary": "User disconnect from chat.",
+        "message": {
+          "$ref": "#/components/messages/DisconnectData"
+        }
+      },
+      "bindings": {
+        "ws": {}
+      }
+    },
+    "join_chat": {
+      "description": "This channel is used for send list of online users to client and save user data in session",
+      "subscribe": {
+        "summary": "Receive user access token",
+        "message": {
+          "$ref": "#/components/messages/UserToken"
+        }
+      },
+      "publish": {
+        "summary": "Send list of online users and connect user to chat room",
+        "message": {
+          "$ref": "#/components/messages/UserInfo"
+        }
+      },
+      "bindings": {
+        "ws": {}
+      }
+    },
+    "send_message": {
+      "description": "This channel is used for send message data to all online users",
+      "subscribe": {
+        "summary": "User send message to server then server resend this message to all in room",
+        "message": {
+          "$ref": "#/components/messages/DisconnectData"
+        }
+      },
+      "publish": {
+        "summary": "User send message to room chat",
+        "message": {
+          "$ref": "#/components/messages/DisconnectData"
+        }
+      },
+      "bindings": {
+        "ws": {}
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "User": {
+        "type": "object",
+                                        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+                                                            "required": [],
+            "nullable": false,
+            "x-enum-varnames": [],
+            "title": "Id",
+            "#-special-path-#-extras-#-special-#": {
+              "title": "Id"
+            }
+          },
+          "username": {
+            "type": "string",
+                                                            "required": [],
+            "nullable": false,
+            "x-enum-varnames": [],
+            "title": "Username",
+            "#-special-path-#-extras-#-special-#": {
+              "title": "Username"
+            }
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+                                                            "required": [],
+            "nullable": false,
+            "x-enum-varnames": [],
+            "title": "Email",
+            "#-special-path-#-extras-#-special-#": {
+              "title": "Email"
+            }
+          },
+          "profile_image": {
+            "type": "string",
+                                                            "required": [],
+            "nullable": false,
+            "x-enum-varnames": [],
+            "title": "Profile Image",
+            "#-special-path-#-extras-#-special-#": {
+              "title": "Profile Image"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "username",
+          "email"
+        ],
+        "nullable": false,
+        "x-enum-varnames": [],
+        "title": "User",
+        "#-special-path-#-extras-#-special-#": {
+          "title": "User"
+        },
+        "deprecated": false
+      },
+      "ChatMessage": {
+        "type": "object",
+                                        "properties": {
+          "text": {
+            "type": "string",
+                                                            "required": [],
+            "nullable": false,
+            "x-enum-varnames": [],
+            "title": "Text",
+            "#-special-path-#-extras-#-special-#": {
+              "title": "Text"
+            }
+          },
+          "image": {
+            "type": "string",
+                                                            "required": [],
+            "nullable": false,
+            "x-enum-varnames": [],
+            "title": "Image",
+            "#-special-path-#-extras-#-special-#": {
+              "title": "Image"
+            }
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+                                                            "required": [],
+            "nullable": false,
+            "x-enum-varnames": [],
+            "title": "User Id",
+            "#-special-path-#-extras-#-special-#": {
+              "title": "User Id"
+            }
+          }
+        },
+        "required": [
+          "text",
+          "user_id"
+        ],
+        "nullable": false,
+        "x-enum-varnames": [],
+        "title": "ChatMessage",
+        "#-special-path-#-extras-#-special-#": {
+          "title": "ChatMessage"
+        },
+        "deprecated": false
+      },
+      "Disconnect": {
+        "type": "object",
+                                        "properties": {
+          "detail": {
+            "type": "string",
+                                                            "required": [],
+            "nullable": false,
+            "x-enum-varnames": [],
+            "title": "Detail",
+            "#-special-path-#-extras-#-special-#": {
+              "title": "Detail"
+            }
+          }
+        },
+        "required": [
+          "detail"
+        ],
+        "nullable": false,
+        "x-enum-varnames": [],
+        "title": "Disconnect",
+        "#-special-path-#-extras-#-special-#": {
+          "title": "Disconnect"
+        },
+        "deprecated": false
+      },
+      "AccessToken": {
+        "type": "object",
+                                        "properties": {
+          "access_token": {
+            "type": "string",
+                                                            "required": [],
+            "nullable": false,
+            "x-enum-varnames": [],
+            "title": "Access Token",
+            "#-special-path-#-extras-#-special-#": {
+              "title": "Access Token"
+            }
+          }
+        },
+        "required": [
+          "access_token"
+        ],
+        "nullable": false,
+        "x-enum-varnames": [],
+        "title": "AccessToken",
+        "#-special-path-#-extras-#-special-#": {
+          "title": "AccessToken"
+        },
+        "deprecated": false
+      }
+    },
+    "messages": {
+      "DisconnectData": {
+        "payload": {
+                                                  "required": [],
+          "$ref": "#/components/schemas/Disconnect",
+          "nullable": false,
+          "x-enum-varnames": [],
+          "#-special-path-#-extras-#-special-#": {},
+          "deprecated": false
+        },
+        "contentType": "application/json",
+        "name": "DisconnectData",
+        "title": "Disconnect user",
+        "summary": "Action for disconnect user from server",
+        "description": "Disconnect user from server and print success disconnect, delete user from list of online users",
+        "tags": [
+          {
+            "name": "Disconnect User"
+          }
+        ]
+      },
+      "SendMessage": {
+        "payload": {
+                                                  "required": [],
+          "$ref": "#/components/schemas/ChatMessage",
+          "nullable": false,
+          "x-enum-varnames": [],
+          "#-special-path-#-extras-#-special-#": {},
+          "deprecated": false
+        },
+        "contentType": "application/json",
+        "name": "SendMessage",
+        "title": "Send Message",
+        "summary": "Action to get new messages.",
+        "description": "Get new messages in chat",
+        "tags": [
+          {
+            "name": "Send Message"
+          }
+        ]
+      },
+      "UserInfo": {
+        "payload": {
+                                                  "required": [],
+          "$ref": "#/components/schemas/User",
+          "nullable": false,
+          "x-enum-varnames": [],
+          "#-special-path-#-extras-#-special-#": {},
+          "deprecated": false
+        },
+        "contentType": "application/json",
+        "name": "UserInfo",
+        "title": "User Info",
+        "summary": "Action to got a list of online users info.",
+        "description": "Get info about all online users",
+        "tags": [
+          {
+            "name": "User"
+          },
+          {
+            "name": "Additional Info"
+          }
+        ]
+      },
+      "UserToken": {
+        "payload": {
+                                                  "required": [],
+          "$ref": "#/components/schemas/AccessToken",
+          "nullable": false,
+          "x-enum-varnames": [],
+          "#-special-path-#-extras-#-special-#": {},
+          "deprecated": false
+        },
+        "contentType": "application/json",
+        "name": "UserToken",
+        "title": "User Token",
+        "summary": "Auth user",
+        "description": "Verify token and auth user in chat",
+        "tags": [
+          {
+            "name": "UserToken"
+          }
+        ]
       }
     }
   }

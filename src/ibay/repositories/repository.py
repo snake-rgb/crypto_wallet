@@ -3,10 +3,10 @@ from fastapi import HTTPException
 from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
-
+from src.delivery.models import Order
 from src.ibay.enums import OrderStatus
-from src.ibay.models import Product, Order
-from src.ibay.schemas import ProductSchema, OrderSchema
+from src.ibay.models import Product
+from src.ibay.schemas import ProductSchema
 from src.wallet.models import Transaction
 
 

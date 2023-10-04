@@ -23,6 +23,7 @@ class AuthService:
         if user:
             access_token = create_access_token(user.id, remember_me=login_scheme.remember_me)
             expire_time = datetime.utcnow() + timedelta(seconds=15)
+
             if login_scheme.remember_me:
                 response.set_cookie(key="access_token", value=access_token, max_age=1707109200)
 
@@ -46,6 +47,19 @@ class AuthService:
                 password=register_schema.password,
                 remember_me=True,
             ), response=response)
+            return user
+        except IntegrityError:
+            raise HTTPException(status_code=400, detail='Не удалось создать пользователя')
+
+    async def register_superuser(self, register_schema: RegisterSchema, response: Response) -> User:
+        hashed_password = self.password_hasher(register_schema.password)
+        try:
+            user = await self.auth_repository.register_superuser(register_schema, hashed_password=hashed_password)
+            # await self.login(login_scheme=LoginScheme(
+            #     email=register_schema.email,
+            #     password=register_schema.password,
+            #     remember_me=True,
+            # ), response=response)
             return user
         except IntegrityError:
             raise HTTPException(status_code=400, detail='Не удалось создать пользователя')

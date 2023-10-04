@@ -12,8 +12,9 @@ import sqlalchemy_utils
 # migrations models
 from src.wallet.models import Wallet, Transaction, Blockchain, Asset
 from src.users.models import User
-from src.ibay.models import Order, Product
+from src.ibay.models import Product
 from src.chat.models import Message
+from src.delivery.models import Order
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

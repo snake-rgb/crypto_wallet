@@ -1,13 +1,14 @@
 import datetime
 from decimal import Decimal, getcontext
 from typing import Callable, Iterator, Optional
-from sqlalchemy import select, desc, asc
+from sqlalchemy import select, desc, asc, distinct
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
 from src.users.models import User
 from src.wallet.enums import TransactionStatus
 from src.wallet.models import Wallet, Transaction, Asset
+from src.wallet.schemas import AssetSchema
 
 
 class WalletRepository:
@@ -199,6 +200,7 @@ class WalletRepository:
             return wallets
 
     async def get_wallet_by_address(self, wallet_address: str) -> Wallet:
+        print(wallet_address)
         async with self.session_factory() as session:
             query = await session.execute(
                 select(Wallet).options(joinedload(Wallet.user)).where(Wallet.address == wallet_address))
@@ -208,8 +210,8 @@ class WalletRepository:
     async def get_latest_transaction_by_wallet(self, wallet_address: str) -> Transaction:
         async with self.session_factory() as session:
             query = await session.execute(select(Transaction).where(
-                Transaction.from_address == wallet_address or Transaction.to_address == Transaction.to_address
-                and Transaction.status != TransactionStatus.PENDING).order_by(
+                Transaction.from_address == wallet_address.lower() or Transaction.to_address == wallet_address.lower()
+                and Transaction.status == TransactionStatus.SUCCESS).order_by(
                 desc('age')))
             result = query.scalars().first()
             return result
@@ -217,7 +219,16 @@ class WalletRepository:
     async def get_wallet_transactions_from_db(self, wallet_address: str) -> list[Transaction]:
         async with self.session_factory() as session:
             query = await session.execute(select(Transaction).where(
-                Transaction.from_address == wallet_address or Transaction.to_address == Transaction.to_address).order_by(
-                desc('id')))
+                Transaction.from_address == wallet_address.lower() or
+                Transaction.to_address == wallet_address.lower()).order_by(
+                desc('age')))
             result = query.scalars().all()
+            print(len(set(result)))
             return result
+
+    async def create_asset(self, asset_schema: AssetSchema):
+        async with self.session_factory() as session:
+            asset = Asset(**asset_schema.dict())
+            session.add(asset)
+            await session.commit()
+            await session.refresh(asset)

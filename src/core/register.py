@@ -39,8 +39,9 @@ class RegisterContainer(containers.DeclarativeContainer):
         Celery,
         broker=settings.RABBITMQ_URL,
         include=['src.users.tasks', ],
-        backend=settings.CELERY_RESULT_BACKEND
+        backend=settings.CELERY_RESULT_BACKEND,
     )
+
     moralis_container = providers.Container(MoralisContainer)
     web3_container = providers.Container(Web3Container)
     core_container = providers.Container(CoreContainer)

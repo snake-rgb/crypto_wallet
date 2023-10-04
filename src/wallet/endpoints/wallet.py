@@ -51,11 +51,17 @@ async def get_wallet_transactions(
         wallet_service: WalletService = Depends(Provide[RegisterContainer.wallet_container.wallet_service]),
         bearer: HTTPAuthorizationCredentials = Depends(user_auth),
 ):
+    address = address.lower()
     latest_transaction = await wallet_service.get_latest_transaction_by_wallet(address)
-    block_data = await wallet_service.get_transaction_by_hash(latest_transaction.hash)
-    from_block = block_data['blockNumber']
-    result = await wallet_service.get_wallet_transactions(address=address, limit=limit, cursor=cursor, page=page,
-                                                          from_block=from_block)
+
+    if latest_transaction:
+        block_data = await wallet_service.get_transaction_by_hash(latest_transaction.hash)
+        from_block = block_data.get('blockNumber') if block_data is not None else None
+    else:
+        from_block = None
+
+    await wallet_service.get_wallet_transactions(address=address, limit=limit, cursor=cursor, page=page,
+                                                 from_block=from_block)
     transactions_db = await wallet_service.get_wallet_transactions_from_db(address)
 
     return {

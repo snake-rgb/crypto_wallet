@@ -3,6 +3,8 @@ from decimal import Decimal, getcontext
 from fastapi import HTTPException
 from propan.brokers.rabbit import RabbitExchange
 from web3.datastructures import AttributeDict
+from web3.exceptions import InvalidAddress
+
 from config_socketio.config_socketio import socket_rabbit_router
 from src.web3.web3_api import Web3API
 from src.core.register import RegisterContainer
@@ -15,7 +17,10 @@ async def get_balance(
         data: dict,
 ):
     web3_api: Web3API = RegisterContainer.web3_container.web3_api()
-    return await web3_api.get_balance(data.get('address'))
+    try:
+        return await web3_api.get_balance(data.get('address'))
+    except InvalidAddress:
+        return await web3_api.get_balance(await web3_api.to_checksum_address(data.get('address')))
 
 
 @socket_rabbit_router.handle('get_transaction_count', exchange=web3_exchange)
@@ -73,24 +78,44 @@ async def get_transaction_by_hash(
 ):
     web3_api: Web3API = RegisterContainer.web3_container.web3_api()
     transaction: AttributeDict = await web3_api.web3.eth.get_transaction(data.get('transaction_hash'))
-    return {
-        'blockHash': transaction.get('blockHash').hex(),
-        'blockNumber': transaction.get('blockNumber'),
-        'from': transaction.get('from'),
-        'gas': transaction.get('gas'),
-        'gasPrice': transaction.get('gasPrice'),
-        'hash': transaction.get('hash').hex(),
-        'input': transaction.get('input').hex(),
-        'nonce': transaction.get('nonce'),
-        'to': transaction.get('to'),
-        'transactionIndex': transaction.get('transactionIndex'),
-        'value': transaction.get('value'),
-        'type': transaction.get('type'),
-        'v': transaction.get('v'),
-        'r': transaction.get('r').hex(),
-        's': transaction.get('s').hex(),
-        'chain_Id': transaction.get('chainId'),
-    }
+    if transaction.get('blockHash'):
+        return {
+            'blockHash': transaction.get('blockHash').hex(),
+            'blockNumber': transaction.get('blockNumber'),
+            'from': transaction.get('from'),
+            'gas': transaction.get('gas'),
+            'gasPrice': transaction.get('gasPrice'),
+            'hash': transaction.get('hash').hex(),
+            'input': transaction.get('input').hex(),
+            'nonce': transaction.get('nonce'),
+            'to': transaction.get('to'),
+            'transactionIndex': transaction.get('transactionIndex'),
+            'value': transaction.get('value'),
+            'type': transaction.get('type'),
+            'v': transaction.get('v'),
+            'r': transaction.get('r').hex(),
+            's': transaction.get('s').hex(),
+            'chain_Id': transaction.get('chainId'),
+        }
+    else:
+        return {
+            'blockHash': None,
+            'blockNumber': None,
+            'from': transaction.get('from'),
+            'gas': transaction.get('gas'),
+            'gasPrice': transaction.get('gasPrice'),
+            'hash': transaction.get('hash').hex(),
+            'input': transaction.get('input').hex(),
+            'nonce': transaction.get('nonce'),
+            'to': transaction.get('to'),
+            'transactionIndex': transaction.get('transactionIndex'),
+            'value': transaction.get('value'),
+            'type': transaction.get('type'),
+            'v': transaction.get('v'),
+            'r': transaction.get('r').hex(),
+            's': transaction.get('s').hex(),
+            'chain_Id': transaction.get('chainId'),
+        }
 
 
 @socket_rabbit_router.handle('get_transaction_receipt', exchange=web3_exchange)
@@ -138,11 +163,10 @@ async def address_is_valid(
     return is_valid
 
 
-# @socket_rabbit_router.handle('convert_wei_to_ether', exchange=web3_exchange)
-# async def convert_wei_to_ether(
-#         data: dict,
-# ) -> Decimal:
-#     web3_api: Web3API = RegisterContainer.web3_container.web3_api()
-#     value: Decimal = Decimal(data.get('value'))
-#     ether_amount = await web3_api.convert_wei_to_ether(value)
-#     return Decimal(ether_amount).quantize(Decimal('0.000000000000000001'))
+@socket_rabbit_router.handle('to_checksum_address', exchange=web3_exchange)
+async def to_checksum_address(
+        data: dict,
+) -> str:
+    web3_api: Web3API = RegisterContainer.web3_container.web3_api()
+    wallet_address: str = await web3_api.to_checksum_address(data.get('wallet_address'))
+    return wallet_address

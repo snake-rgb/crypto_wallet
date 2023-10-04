@@ -3,6 +3,33 @@ import {logout} from "/static/scripts/js/utils.js";
 
 let profile_image
 let wallets_count
+let socket
+
+socket = io('ws://localhost:8001/',
+    {
+        transports: ["websocket", 'polling'],
+        autoConnect: true,
+    }
+)
+// socket connected event
+socket.on("connect", () => {
+    console.log('Socket connected')
+    socket.emit('event_subscription', {'access_token': Cookies.get('access_token').replace('Bearer ', '')})
+});
+
+socket.on("disconnect", () => {
+    console.log('Socket disconnected')
+});
+socket.on("receive_transaction", (data) => {
+    let value = parseFloat(data['value']).toFixed(6)
+    let address = data['address']
+    if (data['status'] === 'received') {
+        toastr.info(`Получено ${value} ETH на кошелёк.\n ${address} \n<a href="https://sepolia.etherscan.io/tx/${data['hash']}">Ссылка на транзакцию</a>`, 'Новая транзакция')
+    } else {
+        toastr.info(`Снято ${value} ETH с кошелька.\n ${address} \n<a href="https://sepolia.etherscan.io/tx/${data['hash']}">Ссылка на транзакцию</a>`, 'Новая транзакция')
+
+    }
+});
 $(document).ready(function () {
     toastr.options = {
         "closeButton": true,
@@ -65,7 +92,6 @@ $('.import-confirm-button').click(function () {
     })
 })
 $('#create-wallet-button').click(function () {
-    // TODO: исправить id asseta при production
     let params = {
         'asset_id': 1
     }

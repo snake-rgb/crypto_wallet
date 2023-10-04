@@ -1,5 +1,9 @@
 import datetime
-from sqlalchemy import Column, Integer, Boolean, Float, ForeignKey, CHAR, String, Numeric, DECIMAL, DateTime, Enum
+
+import pytz
+from sqladmin import ModelView
+from sqlalchemy import Column, Integer, Boolean, Float, ForeignKey, CHAR, String, Numeric, DECIMAL, DateTime, Enum, \
+    Index
 from sqlalchemy.orm import relationship
 from sqlalchemy_utils import URLType
 
@@ -21,6 +25,9 @@ class Wallet(Base):
     asset_id = Column(Integer, ForeignKey('assets.id'))
     # args  =  model name, table name
     asset = relationship('Asset', backref="wallets")
+
+
+wallet_address_index = Index('wallet_address_index', Wallet.user_id, Wallet.address, unique=True)
 
 
 class Asset(Base):
@@ -51,7 +58,20 @@ class Transaction(Base):
     from_address = Column(String)
     to_address = Column(String)
     value = Column(DECIMAL())
-    age = Column(DateTime(), default=datetime.datetime.utcnow())
+    age = Column(DateTime(), default=datetime.datetime.now())
     fee = Column(DECIMAL())
     status = Column(Enum(TransactionStatus),
                     default=TransactionStatus.PENDING)
+
+
+class AssetAdmin(ModelView, model=Asset):
+    column_list = [Asset.id, Asset.short_name, Asset.symbol, Asset.decimal_places]
+
+
+class WalletAdmin(ModelView, model=Wallet):
+    column_list = [Wallet.id, Wallet.address, Wallet.user, Wallet.asset, Wallet.balance, Wallet.private_key]
+
+
+class TransactionAdmin(ModelView, model=Transaction):
+    column_list = [Transaction.id, Transaction.hash, Transaction.from_address, Transaction.to_address,
+                   Transaction.value, Transaction.age, Transaction.fee, Transaction.status]

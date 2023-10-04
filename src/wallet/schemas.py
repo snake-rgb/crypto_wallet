@@ -5,7 +5,7 @@ from pydantic import BaseModel
 
 
 class AssetSchema(BaseModel):
-    image: str
+    image: str | None
     short_name: str
     decimal_places: int
     symbol: str

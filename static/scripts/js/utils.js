@@ -23,13 +23,13 @@ export function verify_token() {
             },
             success: function (response) {
                 if (response === true)
-                    if (window.location.href === 'http://127.0.0.1:8000/login/' || window.location.href === 'http://127.0.0.1:8000/register/') {
+                    if (window.location.href === `http://${window.location.host}/login/` || window.location.href === `http://${window.location.host}/register/`) {
                         window.location = base_url + '/profile/'
                     }
             },
             statusCode: {
                 403: function () {
-                    if (window.location.href === 'http://127.0.0.1:8000/profile/' || window.location.href === 'http://127.0.0.1:8000/chat/' || window.location.href === 'http://127.0.0.1:8000/wallets/')
+                    if (window.location.href === `http://${window.location.host}/profile/` || window.location.href === `http://${window.location.host}/chat/` || window.location.href === `http://${window.location.host}/wallets/`)
                         window.location = base_url + '/login/'
                 }
             },
