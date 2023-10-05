@@ -4,7 +4,7 @@ let socket
 let chatHistoryBody = document.querySelector('.chat-history-body')
 let user_id
 // socket connection to namespace chat
-socket = io('ws://localhost:8001/',
+socket = io('ws://0.0.0.0:8001/',
     {
         transports: ["websocket", 'polling'],
         autoConnect: true,

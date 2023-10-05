@@ -5,7 +5,7 @@ let profile_image
 let wallets_count
 let socket
 
-socket = io('ws://localhost:8001/',
+socket = io('ws://0.0.0.0:8001/',
     {
         transports: ["websocket", 'polling'],
         autoConnect: true,
