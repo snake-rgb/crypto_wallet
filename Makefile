@@ -1,5 +1,5 @@
 celery_run:
-	celery -A config_celery.celery_config:celery worker --loglevel=INFO --concurrency 8
+	celery -A config_celery.celery_config:celery worker --loglevel=INFO --concurrency 2
 make flower_run:
 	celery --broker=amqp://guest:guest@rabbitmq:5672// flower
 beat_run:
