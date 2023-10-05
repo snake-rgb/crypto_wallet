@@ -117,9 +117,9 @@ async def send_message(sid, data):
                    data,
                    )
 
+
 sanic_app.add_task(delivery())
 sanic_app.add_task(get_block_latest())
-
 
 
 async def add_user_to_redis(sid, data: dict):

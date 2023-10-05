@@ -36,7 +36,6 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
-    # fast_api_app.add_middleware(SessionMiddleware, secret_key=settings.SECRET_KEY)
     init_routers(fast_api_app)
 
     return fast_api_app
@@ -69,17 +68,12 @@ async def shutdown():
     print('fastapi shutdown')
 
 
-@app.get('/last-block/')
-async def set_last_block(
-):
-    web3_api: Web3API = RegisterContainer.web3_container.web3_api()
-    redis = RegisterContainer.parser_container.redis()
-    await redis.set('last_block_number', await web3_api.get_block_number_latest())
+# @app.get('/last-block/')
+# async def set_last_block(
+# ):
+#     web3_api: Web3API = RegisterContainer.web3_container.web3_api()
+#     redis = RegisterContainer.parser_container.redis()
+#     await redis.set('last_block_number', await web3_api.get_block_number_latest())
 
 
-@app.get('/test/')
-async def test(
-):
-    wallet_service: WalletService = RegisterContainer.wallet_container.wallet_service()
-    web3_api: Web3API = RegisterContainer.web3_container.web3_api()
-    return await wallet_service.get_wallet_by_address('0xd8f38daa59799900b9629622b8d9b17a3cfd4ba9')
+
