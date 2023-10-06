@@ -68,7 +68,7 @@ async def join_chat(sid,
     access_token: str = str(data.get('access_token'))
     user = await user_service.profile(access_token)
 
-    await sio.save_session(sid, {'access_token': access_token, 'user_id': user.id})
+    await sio.save_session(sid, {'access_token': access_token, 'user_id': user.id, 'profile_image': user.profile_image})
 
     await add_user_to_redis(sid, {sid: {
         'user_id': user.id,
@@ -82,7 +82,8 @@ async def join_chat(sid,
 @sio.on('send_message')
 async def send_message(sid, data):
     session = await sio.get_session(sid)
-    user_id = session.get('user_id')
+    print(data)
+    data['profile_image'] = session.get('profile_image')
     await sio.emit('send_message',
                    data,
                    )
@@ -151,5 +152,6 @@ async def delivery(ibay_service: IbayService = Provide[RegisterContainer.ibay_co
         await ibay_service.delivery()
         await asyncio.sleep(5)
 
+
 sanic_app.add_task(delivery())
-sanic_app.add_task(get_block_latest())
+# sanic_app.add_task(get_block_latest())

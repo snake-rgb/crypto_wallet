@@ -4,7 +4,7 @@ let socket
 let chatHistoryBody = document.querySelector('.chat-history-body')
 let user_id
 // socket connection to namespace chat
-socket = io(`ws://${window.location.hostname}:8001/`,
+socket = io(`ws://0.0.0.0:8001/`,
     {
         transports: ["websocket", 'polling'],
         autoConnect: true,
@@ -46,6 +46,9 @@ socket.on("send_message", (data) => {
     if (data['user_id'] !== user_id) {
         let message_template = $('#chat-message-template').clone(true, true)
         let message_text = data['text']
+        let message_image = data['image']
+        if (message_image)
+            $(message_template).find('.chat-message-text').append(`<img src="${message_image}" class="chat-message-image" alt="">`)
         $(message_template).attr('id', '')
         $(message_template).find('.chat-message-text>p').text(message_text)
 
@@ -106,12 +109,11 @@ $('.send-msg-btn').click(function () {
 
         let profile_image = $('.profile-image').prop('src')
         $(message_template).find('.chat-message-avatar').prop('src', profile_image)
-        send_message_ajax(message_text_for_db, profile_image)
         if ($('#attach-doc').prop('src'))
             $(message_template).find('.chat-message-text').append(`<img src="${$('#attach-doc').prop('src')}" class="chat-message-image" alt="">`)
         $(message_template).find('.message-time').text(`${convert_time(date.getHours())}:` + `${convert_time(date.getMinutes())}`)
+        send_message_ajax()
         $(message_template).show()
-
         $('.message-input').val('')
         $('#attach-doc').attr('src', null)
         $('.chat-history').append(message_template)
@@ -123,7 +125,7 @@ $('.send-msg-btn').click(function () {
 
 })
 
-function send_message_ajax(message_text_for_db, profile_image) {
+function send_message_ajax() {
     let base_url = 'http://' + window.location.host
     let api_endpoint = '/api/v1/create-message/'
 
@@ -142,11 +144,9 @@ function send_message_ajax(message_text_for_db, profile_image) {
         },
         data: data,
         success: function (response) {
-            socket.emit('send_message', {
-                'user_id': user_id,
-                'text': message_text_for_db,
-                'profile_image': profile_image,
-            })
+            console.log(response)
+            socket.emit('send_message', response['message'])
+
         },
         error: function (response) {
             console.log(response)
@@ -165,7 +165,7 @@ function chat_history() {
             'Content-Type': 'application/json',
         },
         success: function (response) {
-            // for (let i = response['messages'].length - 1; i >= 0; i--) {
+
             for (let i = 0; i < response['messages'].length; i++) {
                 let message_template
                 let profile_image
@@ -194,7 +194,6 @@ function chat_history() {
                     messages_text.push(message_text.substring(0, 70));
                     message_text = message_text.substring(70);
                 }
-
                 for (let i = 0; i < messages_text.length; i++) {
                     $(message_template).find('.chat-message-text').append(`<p class="mb-0">${messages_text[i]}</p>`);
                 }
