@@ -34,7 +34,7 @@ def token_verify(access_token: str):
         try:
             jwt.decode(
                 access_token,
-                key=b64decode(SECRET_KEY),
+                key=SECRET_KEY,
                 leeway=10,
                 algorithms=["HS256"]
             )
@@ -81,7 +81,7 @@ def decode_token(access_token: str) -> dict:
         print('Decode token - ', access_token)
         payload = jwt.decode(
             access_token,
-            key=b64decode(SECRET_KEY),
+            key=SECRET_KEY,
             leeway=10,
             algorithms=["HS256"]
         )
