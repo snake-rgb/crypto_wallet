@@ -1,4 +1,7 @@
+import {verify_token} from '/static/scripts/js/utils.js';
+
 // email validation pattern
+
 $.validator.methods.email = function (value, element) {
     return this.optional(element) || new RegExp("([A-Za-z0-9]+[.-_])*[A-Za-z0-9]+@[A-Za-z0-9-]+(\\.[A-Z|a-z]{2,})+").test(value);
 }
