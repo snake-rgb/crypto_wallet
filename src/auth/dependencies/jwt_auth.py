@@ -34,6 +34,7 @@ def token_verify(access_token: str):
             jwt.decode(
                 access_token,
                 key=SECRET_KEY,
+                leeway=10,
                 algorithms=["HS256"]
             )
             return access_token
@@ -79,8 +80,10 @@ def decode_token(access_token: str) -> dict:
         payload = jwt.decode(
             access_token,
             key=SECRET_KEY,
+            leeway=10,
             algorithms=["HS256"],
         )
+        print('Decode token payload - ', payload)
         return payload
     except Exception as error:
         return error
