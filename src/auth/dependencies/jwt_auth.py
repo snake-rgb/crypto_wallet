@@ -59,14 +59,14 @@ def create_access_token(user_id: int, remember_me: bool) -> str:
         # token data
         payload = {
             'user_id': user_id,
-            # 'iat': iat,
+            'iat': iat,
             "type": 'Bearer',
         }
     else:
         # token data
         payload = {
             'user_id': user_id,
-            # 'iat': iat,
+            'iat': iat,
             'exp': expiration_time,
             "type": 'Bearer',
         }
@@ -79,7 +79,6 @@ def create_access_token(user_id: int, remember_me: bool) -> str:
 def decode_token(access_token: str) -> dict:
     try:
         header_data = jwt.get_unverified_header(access_token)
-        print('Decode token - ', access_token)
         payload = jwt.decode(
             access_token,
             key=SECRET_KEY,
@@ -88,8 +87,6 @@ def decode_token(access_token: str) -> dict:
             options={"verify_signature": False}
         )
 
-        print('Decode token payload - ', payload)
         return payload
     except Exception as error:
-        print(error)
         return error

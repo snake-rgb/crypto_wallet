@@ -65,7 +65,6 @@ async def join_chat(sid,
                     ):
     sio.enter_room(sid, room='chat_room')
     print(f"Client {sid} connected chat")
-    print(f"Join chat {data}")
     access_token: str = str(data.get('access_token'))
     print(access_token)
     user = await user_service.profile(access_token)

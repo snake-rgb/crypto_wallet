@@ -3,7 +3,6 @@ from pathlib import Path
 import environ
 from fastapi_mail import ConnectionConfig
 
-# from fastapi_mail import ConnectionConfig
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
