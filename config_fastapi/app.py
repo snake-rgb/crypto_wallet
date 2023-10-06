@@ -3,6 +3,7 @@ from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from sqladmin import Admin
 from config import settings
+from src.auth.dependencies.jwt_auth import decode_token
 from src.sqladmin.auth import AdminAuth
 from src.users.services.user import UserService
 from .config_fastapi import broker, rabbit_router
@@ -72,11 +73,11 @@ async def shutdown():
 #     redis = RegisterContainer.parser_container.redis()
 #     await redis.set('last_block_number', await web3_api.get_block_number_latest())
 
-# @app.get('/test/')
-# @inject
-# async def test(
-#         user_service: UserService = Depends(Provide[RegisterContainer.user_container.user_service])
-# ):
-#     user = await user_service.profile(
-#         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxNDcsImlhdCI6MTY5NjQyMjQ0NiwidHlwZSI6IkJlYXJlciJ9._OohW-9wqEF-Enirg1XLifRFk0WG1gTiGMnRIiOiVXk")
-#     return user
+@app.get('/test/')
+@inject
+async def test(
+        user_service: UserService = Depends(Provide[RegisterContainer.user_container.user_service])
+):
+    result = decode_token(
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxMjcsImlhdCI6MTY5NjU5NjYzMSwidHlwZSI6IkJlYXJlciJ9.r140hY5omc-4TMgr7zqCCbB2Qx111ULIP-m8cTtu81Y')
+    return result

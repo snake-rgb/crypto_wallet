@@ -75,10 +75,10 @@ def create_access_token(user_id: int, remember_me: bool) -> str:
 
 def decode_token(access_token: str) -> dict:
     try:
-        # header_data = jwt.get_unverified_header(access_token)
+        header_data = jwt.get_unverified_header(access_token)
         print('Decode token - ', access_token)
         payload = jwt.decode(
-            access_token,
+            access_token.encode('utf-8'),
             key=SECRET_KEY,
             leeway=10,
             algorithms=["HS256"],
@@ -86,4 +86,5 @@ def decode_token(access_token: str) -> dict:
         print('Decode token payload - ', payload)
         return payload
     except Exception as error:
+        print(error)
         return error
