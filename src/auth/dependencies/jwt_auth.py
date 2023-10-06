@@ -34,7 +34,7 @@ def token_verify(access_token: str):
             jwt.decode(
                 access_token,
                 key=SECRET_KEY,
-                algorithms=[header_data['alg']]
+                algorithms=["HS256"]
             )
             return access_token
 
