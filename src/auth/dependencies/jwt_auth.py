@@ -1,3 +1,4 @@
+from base64 import b64decode
 from typing import Union
 from datetime import datetime, timedelta
 import jwt
@@ -33,7 +34,7 @@ def token_verify(access_token: str):
         try:
             jwt.decode(
                 access_token,
-                key=SECRET_KEY,
+                key=b64decode(SECRET_KEY),
                 leeway=10,
                 algorithms=["HS256"]
             )
@@ -80,10 +81,11 @@ def decode_token(access_token: str) -> dict:
         print('Decode token - ', access_token)
         payload = jwt.decode(
             access_token,
-            key=SECRET_KEY,
+            key=b64decode(SECRET_KEY),
             leeway=10,
             algorithms=["HS256"]
         )
+
         print('Decode token payload - ', payload)
         return payload
     except Exception as error:
