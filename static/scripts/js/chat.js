@@ -48,7 +48,7 @@ socket.on("send_message", (data) => {
         let message_text = data['text']
         let messages_text = []
         let message_image = data['image']
-        let date = data['date']
+        let date = new Date(data['date'])
 
         $(message_template).find('.chat-message-text').empty()
         while (message_text.length > 0 || data['image']) {
