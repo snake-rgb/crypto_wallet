@@ -95,7 +95,6 @@ $('#attach-doc').change(function () {
         $('#attach-doc').attr('src', e.target.result);
     };
     reader.readAsDataURL(image);
-
 })
 $('.send-msg-btn').click(function () {
 

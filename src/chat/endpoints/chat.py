@@ -36,7 +36,9 @@ async def create_message(
 @inject
 async def get_messages(
         limit: Optional[int] = 10,
-        chat_service: ChatService = Depends(Provide[RegisterContainer.chat_container.chat_service])
+        chat_service: ChatService = Depends(Provide[RegisterContainer.chat_container.chat_service]),
+        bearer: HTTPAuthorizationCredentials = Depends(user_auth)
+
 ):
     messages: list[Message] = await chat_service.get_messages(limit)
     return {'messages': messages}
@@ -46,7 +48,8 @@ async def get_messages(
 @inject
 async def get_user_messages_count(
         user_id: int,
-        chat_service: ChatService = Depends(Provide[RegisterContainer.chat_container.chat_service])
+        chat_service: ChatService = Depends(Provide[RegisterContainer.chat_container.chat_service]),
+        bearer: HTTPAuthorizationCredentials = Depends(user_auth)
 ):
     messages_count: int = await chat_service.get_user_messages_count(user_id)
     return {'messages_count': messages_count}

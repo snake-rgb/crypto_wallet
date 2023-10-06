@@ -1,7 +1,7 @@
 import datetime
 from decimal import Decimal, getcontext
 from typing import Callable, Iterator, Optional
-from sqlalchemy import select, desc, asc, distinct
+from sqlalchemy import select, desc, asc, distinct, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
@@ -218,12 +218,11 @@ class WalletRepository:
 
     async def get_wallet_transactions_from_db(self, wallet_address: str) -> list[Transaction]:
         async with self.session_factory() as session:
-            query = await session.execute(select(Transaction).where(
-                Transaction.from_address == wallet_address.lower() or
-                Transaction.to_address == wallet_address.lower()).order_by(
-                desc('age')))
+            query = await session.execute(select(Transaction).distinct(Transaction.hash).where(or_(
+                Transaction.from_address == wallet_address.lower(),
+                Transaction.to_address == wallet_address.lower()
+            )).order_by(Transaction.hash, desc('age')))
             result = query.scalars().all()
-            print(len(set(result)))
             return result
 
     async def create_asset(self, asset_schema: AssetSchema):

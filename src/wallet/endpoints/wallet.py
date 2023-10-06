@@ -63,7 +63,6 @@ async def get_wallet_transactions(
     await wallet_service.get_wallet_transactions(address=address, limit=limit, cursor=cursor, page=page,
                                                  from_block=from_block)
     transactions_db = await wallet_service.get_wallet_transactions_from_db(address)
-
     return {
         'draw': request.query_params.get('draw'),
         "recordsTotal": len(transactions_db),
@@ -130,8 +129,11 @@ async def import_wallet(
         bearer: HTTPAuthorizationCredentials = Depends(user_auth),
 
 ):
-    wallet: Wallet = await wallet_service.import_wallet(private_key, bearer.credentials)
-    return {'wallet': wallet}
+    try:
+        wallet: Wallet = await wallet_service.import_wallet(private_key, bearer.credentials)
+        return {'wallet': wallet}
+    except Exception as error:
+        print(error)
 
 
 @wallet_router.get(
