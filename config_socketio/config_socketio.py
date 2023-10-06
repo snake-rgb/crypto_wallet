@@ -66,9 +66,8 @@ async def join_chat(sid,
     sio.enter_room(sid, room='chat_room')
     print(f"Client {sid} connected chat")
     access_token: str = str(data.get('access_token'))
-    print(access_token)
     user = await user_service.profile(access_token)
-    print(user)
+
     await sio.save_session(sid, {'access_token': access_token, 'user_id': user.id})
 
     await add_user_to_redis(sid, {sid: {
@@ -152,5 +151,5 @@ async def delivery(ibay_service: IbayService = Provide[RegisterContainer.ibay_co
         await ibay_service.delivery()
         await asyncio.sleep(5)
 
-# sanic_app.add_task(delivery())
-# sanic_app.add_task(get_block_latest())
+sanic_app.add_task(delivery())
+sanic_app.add_task(get_block_latest())

@@ -72,7 +72,6 @@ def create_access_token(user_id: int, remember_me: bool) -> str:
         }
 
     access_token = jwt.encode(payload, SECRET_KEY, algorithm='HS256')
-    print(f'Create token - {access_token}')
     return payload.get('type') + ' ' + access_token
 
 
