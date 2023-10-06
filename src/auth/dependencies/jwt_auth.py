@@ -76,7 +76,7 @@ def decode_token(access_token: str) -> dict:
     try:
         # header_data = jwt.get_unverified_header(access_token)
         payload = jwt.decode(
-            access_token.encode('utf-8'),
+            access_token,
             key=SECRET_KEY,
             algorithms=["HS256"],
         )
