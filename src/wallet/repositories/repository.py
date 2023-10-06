@@ -218,10 +218,10 @@ class WalletRepository:
 
     async def get_wallet_transactions_from_db(self, wallet_address: str) -> list[Transaction]:
         async with self.session_factory() as session:
-            query = await session.execute(select(Transaction).distinct(Transaction.hash).where(or_(
+            query = await session.execute(select(Transaction).where(or_(
                 Transaction.from_address == wallet_address.lower(),
                 Transaction.to_address == wallet_address.lower()
-            )).order_by(Transaction.hash, desc('age')))
+            )).order_by(desc('age')))
             result = query.scalars().all()
             return result
 
