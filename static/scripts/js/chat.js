@@ -46,14 +46,29 @@ socket.on("send_message", (data) => {
     if (data['user_id'] !== user_id) {
         let message_template = $('#chat-message-template').clone(true, true)
         let message_text = data['text']
+        let messages_text = []
         let message_image = data['image']
+        let date = data['date']
+
+        $(message_template).find('.chat-message-text').empty()
+        while (message_text.length > 0 || data['image']) {
+            messages_text.push(message_text.substring(0, 70));
+            message_text = message_text.substring(70);
+        }
+        for (let i = 0; i < messages_text.length; i++) {
+            $(message_template).find('.chat-message-text').append(`<p class="mb-0">${messages_text[i]}</p>`);
+        }
         if (message_image)
             $(message_template).find('.chat-message-text').append(`<img src="${message_image}" class="chat-message-image" alt="">`)
+        if (message_image)
+            $(message_template).find('.chat-message-text').append(`<img src="${message_image}" class="chat-message-image" alt="">`)
+
         $(message_template).attr('id', '')
-        $(message_template).find('.chat-message-text>p').text(message_text)
+        // $(message_template).find('.chat-message-text>p').text(message_text)
 
         let profile_image = data['profile_image']
         $(message_template).find('.chat-message-avatar').prop('src', profile_image)
+        $(message_template).find('.message-time').text(`${convert_time(date.getHours())}:` + `${convert_time(date.getMinutes())}`)
         $(message_template).show()
         $('.chat-history').append(message_template)
         scrollToBottom()
@@ -62,13 +77,11 @@ socket.on("send_message", (data) => {
 
 socket.on("receive_transaction", (data) => {
     let value = parseFloat(data['value']).toFixed(6)
-    console.log('transaction received' + data['address'])
     let address = data['address']
     if (data['status'] === 'received') {
         toastr.info(`Получено ${value} ETH на кошелёк.\n ${address} \n<a href="https://sepolia.etherscan.io/tx/${data['hash']}">Ссылка на транзакцию</a>`, 'Новая транзакция')
     } else {
         toastr.info(`Снято ${value} ETH с кошелька.\n ${address} \n<a href="https://sepolia.etherscan.io/tx/${data['hash']}">Ссылка на транзакцию</a>`, 'Новая транзакция')
-
     }
 });
 

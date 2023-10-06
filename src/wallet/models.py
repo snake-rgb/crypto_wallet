@@ -54,7 +54,7 @@ class Blockchain(Base):
 class Transaction(Base):
     __tablename__ = 'transactions'
     id = Column(Integer, primary_key=True, unique=True)
-    hash = Column(String, unique=True)
+    hash = Column(String, unique=True, nullable=False)
     from_address = Column(String)
     to_address = Column(String)
     value = Column(DECIMAL())
