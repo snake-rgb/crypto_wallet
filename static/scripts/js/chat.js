@@ -106,11 +106,12 @@ $('.send-msg-btn').click(function () {
 
         let profile_image = $('.profile-image').prop('src')
         $(message_template).find('.chat-message-avatar').prop('src', profile_image)
+        send_message_ajax(message_text_for_db, profile_image)
         if ($('#attach-doc').prop('src'))
             $(message_template).find('.chat-message-text').append(`<img src="${$('#attach-doc').prop('src')}" class="chat-message-image" alt="">`)
         $(message_template).find('.message-time').text(`${convert_time(date.getHours())}:` + `${convert_time(date.getMinutes())}`)
         $(message_template).show()
-        send_message_ajax(message_text_for_db, profile_image)
+
         $('.message-input').val('')
         $('#attach-doc').attr('src', null)
         $('.chat-history').append(message_template)
