@@ -51,7 +51,7 @@ async def event_subscription(
         data,
         user_service: UserService = Provide[RegisterContainer.user_container.user_service],
 ):
-    user = await user_service.profile(data.get('access_token'))
+    user = await user_service.profile(str(data.get('access_token')))
     await sio.save_session(sid, {'access_token': data.get('access_token'), 'user_id': user.id})
     sio.enter_room(sid, room=user.id)
     print(f"Client {sid} connected to event room")
