@@ -45,7 +45,8 @@ class InitDatabase:
 
     @inject
     async def create_user(self, register_schema: RegisterSchema, auth_service: AuthService):
-        await auth_service.register(register_schema, response=Response())
+        hashed_password = auth_service.password_hasher(register_schema.password)
+        await auth_service.auth_repository.register(register_schema,hashed_password=hashed_password)
 
     @inject
     async def create_superuser(self, register_schema: RegisterSchema, auth_service: AuthService):
