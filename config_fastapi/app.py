@@ -1,8 +1,10 @@
-from fastapi import FastAPI
+from dependency_injector.wiring import inject, Provide
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from sqladmin import Admin
 from config import settings
 from src.sqladmin.auth import AdminAuth
+from src.users.services.user import UserService
 from .config_fastapi import broker, rabbit_router
 from .routers import init_routers
 from celery import Celery
@@ -62,9 +64,19 @@ async def shutdown():
     await broker.close()
     print('fastapi shutdown')
 
+
 # @app.get('/last-block/')
 # async def set_last_block(
 # ):
 #     web3_api: Web3API = RegisterContainer.web3_container.web3_api()
 #     redis = RegisterContainer.parser_container.redis()
 #     await redis.set('last_block_number', await web3_api.get_block_number_latest())
+
+# @app.get('/test/')
+# @inject
+# async def test(
+#         user_service: UserService = Depends(Provide[RegisterContainer.user_container.user_service])
+# ):
+#     user = await user_service.profile(
+#         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxNDcsImlhdCI6MTY5NjQyMjQ0NiwidHlwZSI6IkJlYXJlciJ9._OohW-9wqEF-Enirg1XLifRFk0WG1gTiGMnRIiOiVXk")
+#     return user

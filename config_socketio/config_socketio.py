@@ -152,5 +152,5 @@ async def delivery(ibay_service: IbayService = Provide[RegisterContainer.ibay_co
         await asyncio.sleep(5)
 
 
-sanic_app.add_task(delivery())
-sanic_app.add_task(get_block_latest())
+# sanic_app.add_task(delivery())
+# sanic_app.add_task(get_block_latest())
