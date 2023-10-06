@@ -5,7 +5,6 @@ from dependency_injector.wiring import inject
 from fastapi import Request, HTTPException
 from jwt import ExpiredSignatureError, DecodeError
 from starlette.status import HTTP_403_FORBIDDEN
-from config import settings
 from config.settings import SECRET_KEY
 from src.base.base import JwtHTTPBearer
 from src.users.models import User
@@ -77,10 +76,11 @@ def decode_token(access_token: str) -> dict:
     try:
         header_data = jwt.get_unverified_header(access_token)
         payload = jwt.decode(
-            access_token,
-            key=settings.SECRET_KEY,
+            access_token.encode('utf-8'),
+            key=SECRET_KEY,
             algorithms=[header_data['alg']]
         )
+
         return payload
     except Exception as error:
         return error
