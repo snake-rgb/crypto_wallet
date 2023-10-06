@@ -1,18 +1,15 @@
-from decimal import Decimal, getcontext
-
-from fastapi import HTTPException
 from propan.brokers.rabbit import RabbitExchange
 from web3.datastructures import AttributeDict
 from web3.exceptions import InvalidAddress
 
-from config_socketio.config_socketio import socket_rabbit_router
+from config_fastapi.config_fastapi import rabbit_router
 from src.web3.web3_api import Web3API
 from src.core.register import RegisterContainer
 
 web3_exchange = RabbitExchange(name='web3_exchange')
 
 
-@socket_rabbit_router.handle('get_balance', exchange=web3_exchange)
+@rabbit_router.handle('get_balance', exchange=web3_exchange)
 async def get_balance(
         data: dict,
 ):
@@ -23,7 +20,7 @@ async def get_balance(
         return await web3_api.get_balance(await web3_api.to_checksum_address(data.get('address')))
 
 
-@socket_rabbit_router.handle('get_transaction_count', exchange=web3_exchange)
+@rabbit_router.handle('get_transaction_count', exchange=web3_exchange)
 async def get_transaction_count(
         data: dict,
 ):
@@ -31,7 +28,7 @@ async def get_transaction_count(
     return await web3_api.web3.eth.get_transaction_count(data.get('from_address'))
 
 
-@socket_rabbit_router.handle('chain_id', exchange=web3_exchange)
+@rabbit_router.handle('chain_id', exchange=web3_exchange)
 async def chain_id(
         data: dict,
 ):
@@ -39,7 +36,7 @@ async def chain_id(
     return await web3_api.web3.eth.chain_id
 
 
-@socket_rabbit_router.handle('convert_ether_to_wei', exchange=web3_exchange)
+@rabbit_router.handle('convert_ether_to_wei', exchange=web3_exchange)
 async def convert_ether_to_wei(
         data: dict,
 ):
@@ -47,7 +44,7 @@ async def convert_ether_to_wei(
     return await web3_api.convert_ether_to_wei(data.get('amount'))
 
 
-@socket_rabbit_router.handle('gas_price', exchange=web3_exchange)
+@rabbit_router.handle('gas_price', exchange=web3_exchange)
 async def gas_price(
         data: dict,
 ):
@@ -55,7 +52,7 @@ async def gas_price(
     return web3_api.web3.to_wei(data.get('price'), data.get('units'))
 
 
-@socket_rabbit_router.handle('sign_transaction', exchange=web3_exchange)
+@rabbit_router.handle('sign_transaction', exchange=web3_exchange)
 async def sign_transaction(
         data: dict,
 ):
@@ -63,7 +60,7 @@ async def sign_transaction(
     return await web3_api.sign_transaction(data)
 
 
-@socket_rabbit_router.handle('send_raw_transaction', exchange=web3_exchange)
+@rabbit_router.handle('send_raw_transaction', exchange=web3_exchange)
 async def send_raw_transaction(
         data: dict,
 ) -> str:
@@ -72,7 +69,7 @@ async def send_raw_transaction(
     return str(transaction_hash.hex())
 
 
-@socket_rabbit_router.handle('get_transaction_by_hash', exchange=web3_exchange)
+@rabbit_router.handle('get_transaction_by_hash', exchange=web3_exchange)
 async def get_transaction_by_hash(
         data: dict,
 ):
@@ -118,7 +115,7 @@ async def get_transaction_by_hash(
         }
 
 
-@socket_rabbit_router.handle('get_transaction_receipt', exchange=web3_exchange)
+@rabbit_router.handle('get_transaction_receipt', exchange=web3_exchange)
 async def get_transaction_receipt(
         data: dict,
 ):
@@ -131,7 +128,7 @@ async def get_transaction_receipt(
     return transaction_receipt
 
 
-@socket_rabbit_router.handle('get_block_by_number', exchange=web3_exchange)
+@rabbit_router.handle('get_block_by_number', exchange=web3_exchange)
 async def get_block_by_number(
         data: dict,
 ):
@@ -154,7 +151,7 @@ async def get_block_by_number(
     }
 
 
-@socket_rabbit_router.handle('address_is_valid', exchange=web3_exchange)
+@rabbit_router.handle('address_is_valid', exchange=web3_exchange)
 async def address_is_valid(
         data: dict,
 ) -> bool:
@@ -163,7 +160,7 @@ async def address_is_valid(
     return is_valid
 
 
-@socket_rabbit_router.handle('to_checksum_address', exchange=web3_exchange)
+@rabbit_router.handle('to_checksum_address', exchange=web3_exchange)
 async def to_checksum_address(
         data: dict,
 ) -> str:

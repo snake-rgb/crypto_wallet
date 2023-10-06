@@ -1,30 +1,116 @@
-import asyncio
 import json
 
 import socketio
+from dependency_injector.wiring import Provide, inject
+import asyncio
+from propan import RabbitBroker
 from aioredis import Redis
-from propan import RabbitRouter, RabbitBroker
 from sanic import Sanic
 from socketio import AsyncAioPikaManager, AsyncServer
 from config import settings
 from src.users.services.user import UserService
-from src.web3.web3_api import Web3API
 from src.core.register import RegisterContainer
+from src.ibay.services.ibay import IbayService
+from src.web3.web3_api import Web3API
 from sanic.log import logger
 
-sanic_app = Sanic('sanic_app')
-
+redis: Redis = RegisterContainer.parser_container.redis()
 manager: AsyncAioPikaManager = socketio.AsyncAioPikaManager(settings.RABBITMQ_URL)
 sio: AsyncServer = socketio.AsyncServer(async_mode="sanic", cors_allowed_origins='*',
                                         client_manager=manager, namespaces=['*'])
+sanic_app = Sanic('sanic_app')
 sio.attach(sanic_app)
-socket_rabbit_router = RabbitRouter()
-redis: Redis = RegisterContainer.parser_container.redis()
+
+
+@sio.on("connect")
+async def connect(
+        sid: str,
+        environ,
+):
+    print(f'Client connected {sid}')
+
+
+@sio.on("disconnect")
+@inject
+async def disconnect(sid,
+                     user_service: UserService = Provide[RegisterContainer.user_container.user_service]
+                     ):
+    sio.leave_room(sid, room='chat_room')
+    session = await sio.get_session(sid)
+    access_token = session.get('access_token')
+    user = await user_service.profile(access_token)
+    await sio.emit('leave_chat', room='chat_room', data={'user_id': user.id})
+    await remove_user_from_redis(sid)
+    print(f"Client {sid} disconnected")
+
+
+@sio.on("event_subscription")
+@inject
+async def event_subscription(
+        sid: str,
+        data,
+        user_service: UserService = Provide[RegisterContainer.user_container.user_service],
+):
+    user = await user_service.profile(data.get('access_token'))
+    await sio.save_session(sid, {'access_token': data.get('access_token'), 'user_id': user.id})
+    sio.enter_room(sid, room=user.id)
+    print(f"Client {sid} connected to event room")
+
+
+@sio.on("join_chat")
+@inject
+async def join_chat(sid,
+                    data,
+                    user_service: UserService = Provide[RegisterContainer.user_container.user_service]
+                    ):
+    sio.enter_room(sid, room='chat_room')
+    print(f"Client {sid} connected chat")
+    print(f"Join chat {data}")
+    access_token: str = str(data.get('access_token'))
+
+    user = await user_service.profile(access_token)
+    await sio.save_session(sid, {'access_token': access_token, 'user_id': user.id})
+
+    await add_user_to_redis(sid, {sid: {
+        'user_id': user.id,
+        'username': user.username,
+        'profile_image': user.profile_image,
+        'sid': sid,
+    }})
+    await sio.emit('join_chat', list(json.loads(await redis.get('online_users')).values()))
+
+
+@sio.on('send_message')
+async def send_message(sid, data):
+    session = await sio.get_session(sid)
+    user_id = session.get('user_id')
+    await sio.emit('send_message',
+                   data,
+                   )
+
+
+async def add_user_to_redis(sid, data: dict):
+    if await redis.get('online_users') is not None:
+        online_users = json.loads(await redis.get('online_users'))
+        online_users[sid] = data.get(sid)
+        print('Online users add user to redis', online_users)
+        await redis.set('online_users', json.dumps(online_users))
+    else:
+        await redis.set('online_users', json.dumps(data))
+
+
+async def remove_user_from_redis(sid):
+    try:
+        online_users: dict = json.loads(await redis.get('online_users'))
+        online_users.pop(sid)
+        await redis.set('online_users', json.dumps(online_users))
+    except KeyError:
+        pass
 
 
 @sanic_app.after_reload_trigger
 @sanic_app.main_process_start
-async def main_start(sanic: Sanic):
+async def main_start(sanic):
     logger.info('sanic startup')
     last_block_number = await redis.get('last_block_number')
     logger.info(last_block_number)
@@ -34,6 +120,11 @@ async def main_start(sanic: Sanic):
 def server_stop(app, loop):
     sanic_app.purge_tasks()
     asyncio.get_event_loop().stop()
+
+
+@sanic_app.before_server_start
+async def setup_container(app, _):
+    app.ext.dependency(RegisterContainer())
 
 
 async def get_block_latest(
@@ -54,89 +145,12 @@ async def get_block_latest(
         await asyncio.sleep(1)
 
 
-async def delivery():
+@inject
+async def delivery(ibay_service: IbayService = Provide[RegisterContainer.ibay_container.ibay_service]):
     while True:
-        await RegisterContainer().ibay_container.ibay_service().delivery()
+        await ibay_service.delivery()
         await asyncio.sleep(5)
-
-
-@sio.on("connect")
-async def connect(
-        sid: str,
-        environ,
-):
-    print(f'Client connected {sid}')
-
-
-@sio.on("disconnect")
-async def disconnect(sid):
-    sio.leave_room(sid, room='chat_room')
-    session = await sio.get_session(sid)
-    access_token = session.get('access_token')
-    user_service: UserService = RegisterContainer.user_container.user_service()
-    user = await user_service.profile(access_token)
-    await sio.emit('leave_chat', room='chat_room', data={'user_id': user.id})
-    await remove_user_from_redis(sid)
-    print(f"Client {sid} disconnected")
-
-
-@sio.on("event_subscription")
-async def event_subscription(
-        sid: str,
-        data,
-):
-    user_service: UserService = RegisterContainer.user_container.user_service()
-    user = await user_service.profile(data.get('access_token'))
-    await sio.save_session(sid, {'access_token': data.get('access_token'), 'user_id': user.id})
-    sio.enter_room(sid, room=user.id)
-    print(f"Client {sid} connected to event room")
-
-
-@sio.on("join_chat")
-async def join_chat(sid, data):
-    sio.enter_room(sid, room='chat_room')
-    print(f"Client {sid} connected chat")
-    print(f"Join chat {data}")
-    user_service: UserService = RegisterContainer.user_container.user_service()
-    user = await user_service.profile(data.get('access_token'))
-    await sio.save_session(sid, {'access_token': data.get('access_token'), 'user_id': user.id})
-
-    await add_user_to_redis(sid, {sid: {
-        'user_id': user.id,
-        'username': user.username,
-        'profile_image': user.profile_image,
-        'sid': sid,
-    }})
-    await sio.emit('join_chat', list(json.loads(await redis.get('online_users')).values()))
-
-
-@sio.on('send_message')
-async def send_message(sid, data):
-    session = await sio.get_session(sid)
-    user_id = session.get('user_id')
-    await sio.emit('send_message',
-                   data,
-                   )
 
 
 sanic_app.add_task(delivery())
 sanic_app.add_task(get_block_latest())
-
-
-async def add_user_to_redis(sid, data: dict):
-    if await redis.get('online_users') is not None:
-        online_users = json.loads(await redis.get('online_users'))
-        online_users[sid] = data.get(sid)
-        print('Online users add user to redis', online_users)
-        await redis.set('online_users', json.dumps(online_users))
-    else:
-        await redis.set('online_users', json.dumps(data))
-
-
-async def remove_user_from_redis(sid):
-    try:
-        online_users: dict = json.loads(await redis.get('online_users'))
-        online_users.pop(sid)
-        await redis.set('online_users', json.dumps(online_users))
-    except KeyError:
-        pass

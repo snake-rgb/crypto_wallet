@@ -19,7 +19,7 @@ class UserRepository:
     async def get_by_id(self, user_id: int) -> User:
         async with self.session_factory() as session:
             result = await session.execute(select(User).where(User.id == user_id))
-            user = result.scalar_one()
+            user = result.scalar_one_or_none()
             if not user:
                 raise UserNotFoundError(user_id)
             return user

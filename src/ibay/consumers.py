@@ -1,6 +1,6 @@
 from propan.brokers.rabbit import RabbitExchange
 
-from config_socketio.config_socketio import socket_rabbit_router
+from config_fastapi.config_fastapi import rabbit_router
 from src.core.register import RegisterContainer
 from src.delivery.models import Order
 from src.ibay.enums import OrderStatus
@@ -9,7 +9,7 @@ from src.ibay.services.ibay import IbayService
 ibay_exchange = RabbitExchange(name='ibay_exchange')
 
 
-@socket_rabbit_router.handle('check_orders_status', exchange=ibay_exchange)
+@rabbit_router.handle('check_orders_status', exchange=ibay_exchange)
 async def check_orders_status(
         transaction_data
 ) -> None:

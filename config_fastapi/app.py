@@ -1,18 +1,13 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqladmin import Admin
-from starlette.middleware.sessions import SessionMiddleware
-
 from config import settings
 from src.sqladmin.auth import AdminAuth
-from src.users.models import UserAdmin
-from src.wallet.service.wallet import WalletService
-from src.web3.web3_api import Web3API
-from .config_fastapi import broker
+from .config_fastapi import broker, rabbit_router
 from .routers import init_routers
 from celery import Celery
 from fastapi.staticfiles import StaticFiles
-from config_socketio.config_socketio import socket_rabbit_router, sanic_app
+from config_socketio.config_socketio import sanic_app
 from src.core.database import Database
 from src.core.register import RegisterContainer
 from .sqladmin_views_routes import init_sqladmin_routes
@@ -56,7 +51,7 @@ async def startup():
 
     app.broker = broker
     await init_sqladmin_routes(admin)
-    app.broker.include_router(socket_rabbit_router)
+    app.broker.include_router(rabbit_router)
     await broker.start()
     app.mount("/socket.io", sanic_app, name='socket.io')
     app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -67,13 +62,9 @@ async def shutdown():
     await broker.close()
     print('fastapi shutdown')
 
-
 # @app.get('/last-block/')
 # async def set_last_block(
 # ):
 #     web3_api: Web3API = RegisterContainer.web3_container.web3_api()
 #     redis = RegisterContainer.parser_container.redis()
 #     await redis.set('last_block_number', await web3_api.get_block_number_latest())
-
-
-

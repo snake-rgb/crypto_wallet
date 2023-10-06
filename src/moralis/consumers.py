@@ -1,12 +1,13 @@
 from propan.brokers.rabbit import RabbitExchange
-from config_socketio.config_socketio import socket_rabbit_router
+
+from config_fastapi.config_fastapi import rabbit_router
 from src.moralis.moralis_api import MoralisAPI
 from src.core.register import RegisterContainer
 
 moralis_exchange = RabbitExchange(name='moralis_exchange')
 
 
-@socket_rabbit_router.handle('get_native_transactions', exchange=moralis_exchange)
+@rabbit_router.handle('get_native_transactions', exchange=moralis_exchange)
 async def get_native_transactions(
         data: dict,
 ):

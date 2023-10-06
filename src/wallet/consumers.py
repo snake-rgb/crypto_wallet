@@ -1,6 +1,7 @@
 from datetime import datetime
 from propan.brokers.rabbit import RabbitExchange
-from config_socketio.config_socketio import socket_rabbit_router
+
+from config_fastapi.config_fastapi import rabbit_router
 from src.core.register import RegisterContainer
 from src.wallet.models import Transaction
 from src.wallet.service.wallet import WalletService
@@ -8,7 +9,7 @@ from src.wallet.service.wallet import WalletService
 wallet_exchange = RabbitExchange(name='wallet_exchange')
 
 
-@socket_rabbit_router.handle('send_transaction', exchange=wallet_exchange)
+@rabbit_router.handle('send_transaction', exchange=wallet_exchange)
 async def send_transaction(
         data,
 ) -> int:
@@ -17,7 +18,7 @@ async def send_transaction(
     return transaction.id
 
 
-@socket_rabbit_router.handle('order_refund', exchange=wallet_exchange)
+@rabbit_router.handle('order_refund', exchange=wallet_exchange)
 async def order_refund(
         data,
 ) -> dict:
@@ -29,7 +30,7 @@ async def order_refund(
     }
 
 
-@socket_rabbit_router.handle('get_wallets_address_in_block', exchange=wallet_exchange)
+@rabbit_router.handle('get_wallets_address_in_block', exchange=wallet_exchange)
 async def get_wallets_address_in_block(
         data,
 ):
@@ -37,7 +38,7 @@ async def get_wallets_address_in_block(
     return await wallet_service.get_wallets_address_in_block(data.get('wallet_address'))
 
 
-@socket_rabbit_router.handle('create_transaction', exchange=wallet_exchange)
+@rabbit_router.handle('create_transaction', exchange=wallet_exchange)
 async def create_transaction(
         data,
 ):
@@ -66,7 +67,7 @@ async def create_transaction(
     }
 
 
-@socket_rabbit_router.handle('change_balance', exchange=wallet_exchange)
+@rabbit_router.handle('change_balance', exchange=wallet_exchange)
 async def change_balance(
         data,
 ):
@@ -78,7 +79,7 @@ async def change_balance(
     )
 
 
-@socket_rabbit_router.handle('create_transaction_bulk', exchange=wallet_exchange)
+@rabbit_router.handle('create_transaction_bulk', exchange=wallet_exchange)
 async def create_transaction_bulk(
         data,
 ):

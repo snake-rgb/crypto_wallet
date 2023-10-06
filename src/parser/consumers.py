@@ -1,13 +1,13 @@
 from propan.brokers.rabbit import RabbitExchange
 
-from config_socketio.config_socketio import socket_rabbit_router
+from config_fastapi.config_fastapi import rabbit_router
 from src.core.register import RegisterContainer
 from src.parser.services.parser import ParserService
 
 parser_exchange = RabbitExchange(name='parser_exchange')
 
 
-@socket_rabbit_router.handle('start_parse', exchange=parser_exchange)
+@rabbit_router.handle('start_parse', exchange=parser_exchange)
 async def start_parse(
         block_number: str,
 ) -> None:
