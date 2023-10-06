@@ -110,15 +110,11 @@ $('.send-msg-btn').click(function () {
             $(message_template).find('.chat-message-text').append(`<img src="${$('#attach-doc').prop('src')}" class="chat-message-image" alt="">`)
         $(message_template).find('.message-time').text(`${convert_time(date.getHours())}:` + `${convert_time(date.getMinutes())}`)
         $(message_template).show()
-        send_message_ajax()
+        send_message_ajax(message_text_for_db, profile_image)
         $('.message-input').val('')
         $('#attach-doc').attr('src', null)
         $('.chat-history').append(message_template)
-        socket.emit('send_message', {
-            'user_id': user_id,
-            'text': message_text_for_db,
-            'profile_image': profile_image,
-        })
+
         scrollToBottom()
     } else
         $('.message-input').val('')
@@ -126,7 +122,7 @@ $('.send-msg-btn').click(function () {
 
 })
 
-function send_message_ajax() {
+function send_message_ajax(message_text_for_db, profile_image) {
     let base_url = 'http://' + window.location.host
     let api_endpoint = '/api/v1/create-message/'
 
@@ -145,7 +141,11 @@ function send_message_ajax() {
         },
         data: data,
         success: function (response) {
-            console.log(response)
+            socket.emit('send_message', {
+                'user_id': user_id,
+                'text': message_text_for_db,
+                'profile_image': profile_image,
+            })
         },
         error: function (response) {
             console.log(response)

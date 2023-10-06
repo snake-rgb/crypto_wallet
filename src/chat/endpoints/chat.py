@@ -26,9 +26,9 @@ async def create_message(
     if message_schema.image != '':
         image = await boto3_service.upload_image(message_schema.image)
         message_schema.image = image
-    payload = decode_token(bearer.credentials)
-    message: Message = await chat_service.create_message(message_schema, user_id=payload.get('user_id'))
-    return {'message': message}
+        payload = decode_token(bearer.credentials)
+        message: Message = await chat_service.create_message(message_schema, user_id=payload.get('user_id'))
+        return {'message': message}
 
 
 @chat_router.get('/get-messages/')
