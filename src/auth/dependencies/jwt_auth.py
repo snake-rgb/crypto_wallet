@@ -82,5 +82,5 @@ def decode_token(access_token: str) -> dict:
             algorithms=[header_data['alg']]
         )
         return payload
-    except:
-        return None
+    except Exception as error:
+        return error
