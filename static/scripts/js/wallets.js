@@ -3,7 +3,7 @@ import {logout, verify_token, get_user} from "/static/scripts/js/utils.js";
 let socket
 let from_address
 let table
-socket = io('ws://0.0.0.0:8001/',
+socket = io(`ws://${window.location.hostname}:8001/`,
     {
         transports: ["websocket", 'polling'],
         autoConnect: true,
