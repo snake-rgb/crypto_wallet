@@ -94,7 +94,7 @@ $('.send-msg-btn').click(function () {
     let message_text_for_db = ''
     let date = new Date()
 
-    if (message_text && $.trim(message_text).length) {
+    if (message_text && $.trim(message_text).length || $.trim(message_text).length === 0 && $('#attach-doc').prop('src')) {
         $(message_template).attr('id', '')
         $(message_template).find('.chat-message-text').empty()
         while (message_text.length > 0) {
