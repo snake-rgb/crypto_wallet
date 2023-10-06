@@ -79,5 +79,5 @@ async def test(
         user_service: UserService = Depends(Provide[RegisterContainer.user_container.user_service])
 ):
     result = decode_token(
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxMjcsImlhdCI6MTY5NjU5NjYzMSwidHlwZSI6IkJlYXJlciJ9.r140hY5omc-4TMgr7zqCCbB2Qx111ULIP-m8cTtu81Y')
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxMjcsImlhdCI6MTY5NjU5NzIwOCwidHlwZSI6IkJlYXJlciJ9.4N6QeMr1GN6UduYrvV8p1zpFoTVmFZUBsPHBA5lYsow")
     return result
