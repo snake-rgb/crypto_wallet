@@ -29,7 +29,11 @@ export function verify_token() {
             },
             statusCode: {
                 403: function () {
-                    if (window.location.href === `http://${window.location.host}/profile/` || window.location.href === `http://${window.location.host}/chat/` || window.location.href === `http://${window.location.host}/wallets/`)
+                    if (window.location.href === `http://${window.location.host}/profile/` ||
+                        window.location.href === `http://${window.location.host}/chat/` ||
+                        window.location.href === `http://${window.location.host}/wallets/` ||
+                        window.location.href === `http://${window.location.host}/`
+                    )
                         window.location = base_url + '/login/'
                 }
             },
