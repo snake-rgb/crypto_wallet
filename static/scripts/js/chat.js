@@ -60,8 +60,6 @@ socket.on("send_message", (data) => {
         }
         if (message_image)
             $(message_template).find('.chat-message-text').append(`<img src="${message_image}" class="chat-message-image" alt="">`)
-        if (message_image)
-            $(message_template).find('.chat-message-text').append(`<img src="${message_image}" class="chat-message-image" alt="">`)
 
         $(message_template).attr('id', '')
         // $(message_template).find('.chat-message-text>p').text(message_text)
