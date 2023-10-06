@@ -67,8 +67,9 @@ async def join_chat(sid,
     print(f"Client {sid} connected chat")
     print(f"Join chat {data}")
     access_token: str = str(data.get('access_token'))
-
+    print(access_token)
     user = await user_service.profile(access_token)
+    print(user)
     await sio.save_session(sid, {'access_token': access_token, 'user_id': user.id})
 
     await add_user_to_redis(sid, {sid: {
@@ -124,6 +125,7 @@ def server_stop(app, loop):
 
 @sanic_app.before_server_start
 async def setup_container(app, _):
+    await redis.delete('online_users')
     app.ext.dependency(RegisterContainer())
 
 
@@ -150,7 +152,6 @@ async def delivery(ibay_service: IbayService = Provide[RegisterContainer.ibay_co
     while True:
         await ibay_service.delivery()
         await asyncio.sleep(5)
-
 
 # sanic_app.add_task(delivery())
 # sanic_app.add_task(get_block_latest())
