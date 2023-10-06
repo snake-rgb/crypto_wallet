@@ -20,7 +20,7 @@ class ProfileSchema(BaseModel):
     def validate_password(cls, password: str):
         password_pattern = "^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9]).{8,}$"
 
-        if password is '':
+        if password == '':
             return None
 
         if not re.match(password_pattern, password) or len(password) > 20:
@@ -35,7 +35,7 @@ class ProfileSchema(BaseModel):
     @validator('confirm_password')
     @classmethod
     def validate_confirm_password(cls, confirm_password: str, values):
-        if confirm_password is '' and values.get('password') is None:
+        if confirm_password == '' and values.get('password') is None:
             return None
 
         if confirm_password == values.get('password'):

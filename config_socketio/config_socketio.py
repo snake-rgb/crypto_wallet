@@ -96,6 +96,7 @@ async def event_subscription(
 async def join_chat(sid, data):
     sio.enter_room(sid, room='chat_room')
     print(f"Client {sid} connected chat")
+    print(f"Join chat {data}")
     user_service: UserService = RegisterContainer.user_container.user_service()
     user = await user_service.profile(data.get('access_token'))
     await sio.save_session(sid, {'access_token': data.get('access_token'), 'user_id': user.id})
