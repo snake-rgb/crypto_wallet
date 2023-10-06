@@ -27,6 +27,7 @@ class UserService:
 
     async def profile(self, access_token: str) -> User:
         payload = decode_token(access_token)
+        print(f'Payload - {payload}')
         user = await self.user_repository.get_by_id(payload.get('user_id'))
         return user
 
@@ -39,7 +40,3 @@ class UserService:
 
     async def chat_activate(self, user_id: int) -> User:
         return await self.user_repository.chat_activate(user_id)
-
-
-
-
