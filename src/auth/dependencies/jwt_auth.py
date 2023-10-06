@@ -37,7 +37,7 @@ def token_verify(access_token: str):
                 key=SECRET_KEY,
                 leeway=10,
                 algorithms=["HS256"],
-                # options={"verify_signature": False}
+                options={"verify_signature": False}
             )
             return access_token
 
@@ -85,7 +85,7 @@ def decode_token(access_token: str) -> dict:
             key=SECRET_KEY,
             leeway=10,
             algorithms=["HS256"],
-            # options={"verify_signature": False}
+            options={"verify_signature": False}
         )
 
         print('Decode token payload - ', payload)
