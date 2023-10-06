@@ -37,7 +37,7 @@ def token_verify(access_token: str):
                 key=SECRET_KEY,
                 leeway=10,
                 algorithms=["HS256"],
-                options={"verify_signature": False}
+                # options={"verify_signature": False}
             )
             return access_token
 
@@ -59,14 +59,14 @@ def create_access_token(user_id: int, remember_me: bool) -> str:
         # token data
         payload = {
             'user_id': user_id,
-            'iat': iat,
+            # 'iat': iat,
             "type": 'Bearer',
         }
     else:
         # token data
         payload = {
             'user_id': user_id,
-            'iat': iat,
+            # 'iat': iat,
             'exp': expiration_time,
             "type": 'Bearer',
         }
@@ -85,7 +85,7 @@ def decode_token(access_token: str) -> dict:
             key=SECRET_KEY,
             leeway=10,
             algorithms=["HS256"],
-            options={"verify_signature": False}
+            # options={"verify_signature": False}
         )
 
         print('Decode token payload - ', payload)
