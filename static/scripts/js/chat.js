@@ -51,7 +51,7 @@ socket.on("send_message", (data) => {
         let date = new Date(data['date'])
 
         $(message_template).find('.chat-message-text').empty()
-        while (message_text.length > 0 || data['image']) {
+        while (message_text.length > 0) {
             messages_text.push(message_text.substring(0, 70));
             message_text = message_text.substring(70);
         }
