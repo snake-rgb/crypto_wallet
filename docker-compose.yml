@@ -42,10 +42,10 @@ services:
       - "8001:8001"
     tty: true
     depends_on:
-      - redis
-      - celery
-      - rabbitmq
-      - web
+      rabbitmq:
+        condition: service_healthy
+      db:
+        condition: service_started
 
 
   nginx:
